@@ -78,16 +78,13 @@ abstract class EffectHud {
         this.UI.setContent(content);
         this.UI.forceRefresh();
         this.UI.open();
-        Game.message("index open -> " + this.index);
         return;
     }
 
     public close(): void {
         this.lock = false;
         this.UI.close();
-        Game.message("count before -> " + EffectHud.positions.size);
         EffectHud.decreaseCountBy(this.index);
-        Game.message("count close ->" + EffectHud.positions.size);
     }
 
     public setScale(scale: string, value: number, max: number): void {

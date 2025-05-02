@@ -91,15 +91,12 @@ var EffectHud = /** @class */ (function () {
         this.UI.setContent(content);
         this.UI.forceRefresh();
         this.UI.open();
-        Game.message("index open -> " + this.index);
         return;
     };
     EffectHud.prototype.close = function () {
         this.lock = false;
         this.UI.close();
-        Game.message("count before -> " + EffectHud.positions.size);
         EffectHud.decreaseCountBy(this.index);
-        Game.message("count close ->" + EffectHud.positions.size);
     };
     EffectHud.prototype.setScale = function (scale, value, max) {
         this.UI.getElements().get(scale).setBinding("value", value / max);
