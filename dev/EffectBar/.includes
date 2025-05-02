@@ -6,5 +6,5 @@ EffectHud.ts
 IEffect.ts
 Effect.ts
 network.ts
-EffectlibCommand.ts
+EffectbarCommand.ts
 export.ts

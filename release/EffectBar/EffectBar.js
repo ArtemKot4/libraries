@@ -422,7 +422,7 @@ Network.addClientPacket("packet.effectlib.hud_unlock", function (data) {
     Effect.get(data.effectType).hud.lock = false;
 });
 Callback.addCallback("NativeCommand", function (command) {
-    if (command.startsWith("/effectlib")) {
+    if (command.startsWith("/effectbar")) {
         Game.prevent();
         return Network.sendToServer("packet.effect.command", {
             args: command.split(" ").slice(1)
