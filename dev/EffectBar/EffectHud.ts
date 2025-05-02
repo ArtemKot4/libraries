@@ -1,10 +1,40 @@
+/**
+ * Class of effect hud.
+ */
 abstract class EffectHud {
+    /**
+     * Set of positions opened huds. Need to work animation of replace positions.
+     */
+
     public static positions: Set<number> = new Set();
 
+    /**
+     * Common height of hud.
+     */
+
     public height!: number;
+
+    /**
+     * Thread of hud. Use to improved operations.
+     */
+
     public thread!: java.lang.Thread;
+
+    /**
+     * Current index of hud in {@link positions}.
+     */
+
     public index!: number;
+
+    /**
+     * Lock state.
+     */
+
     public lock: boolean = false;
+
+    /**
+     * UI of hud. Opening without {@link open} opens empty white ui.
+     */
 
     public UI: UI.Window = (() => {
         const window = new UI.Window();
@@ -14,38 +44,70 @@ abstract class EffectHud {
         return window;
     })();
 
-    public constructor(
-        public type: string
-    ) {}
+    /**
+     * @param type effect type 
+     */
+
+    public constructor(public type: string) {};
+
+    /**
+     * Method, defines sleep time to thread.
+     */
 
     public getThreadSleepTime(): number {
         return 50;
     }
 
+    /**
+     * Method, defines spacing between hud. Usings by formula: ({@link getLocation getLocation().y } + {@link getSpacing getSpacing()} * index).
+     */
+
     public getSpacing(): number {
         return 50;
     }
 
-    public getLocation(): UI.WindowLocationParams {
-        return {};
-    }
+    /**
+     * Method, defines hud's location. "y" value uses to set positions to elements, but don't includes in result window content location "y" field. Method must be defined.
+     */
 
-    public getElements(): UI.ElementSet {
-        return {};
-    }
+    public abstract getLocation(): UI.WindowLocationParams;
+
+    /**
+     * Method, defines hud's elements. Must be defined.
+     */
+
+    public abstract getElements(): UI.ElementSet;
+
+    /**
+     * Method, defines hud's background color.
+     * @default android.graphics.Color.TRANSPARENT
+     */
 
     public getBackgroundColor(): number {
         return android.graphics.Color.TRANSPARENT;
     }
 
+    /**
+     * Method, builds and returns hud's window content by defined methods.
+     */
+
     public getContent(): UI.WindowContent {
         const elements = this.getElements();
         const location = this.getLocation();
+
+        if(!location) {
+            throw new java.lang.RuntimeException(`Location of effect hud by type: "${this.type}" is not defined`);
+        }
+
+        if(!elements) {
+            throw new java.lang.RuntimeException(`Elements of effect hud by type: "${this.type}" is not defined`);
+        }
+
         location.y += this.getSpacing() * EffectHud.positions.size;
 
         const content: UI.WindowContent = {
             location: {
-                x: location.x
+                ...location, y: 0
             },
             drawing: [
                 {
@@ -64,9 +126,17 @@ abstract class EffectHud {
         return content;
     };
 
+    /**
+     * Method to get opened state of window.
+     */
+
     public isOpened(): boolean {
         return this.UI.isOpened();
     }
+
+    /**
+     * Method, opens ui with builded content and increases {@link positions} size.
+     */
     
     public open(): void {
         if(this.isOpened()) return;
@@ -81,16 +151,31 @@ abstract class EffectHud {
         return;
     }
 
+    /**
+     * Method, closes ui and decreases {@link positions} size by delete {@link index} value.
+     */
+
     public close(): void {
         this.lock = false;
         this.UI.close();
         EffectHud.decreaseCountBy(this.index);
     }
 
+    /**
+     * Method set scale of hud.
+     * @param scale scale name
+     * @param value value
+     * @param max max value
+     */
+
     public setScale(scale: string, value: number, max: number): void {
         this.UI.getElements().get(scale).setBinding("value", value / max);
         return;
     }
+
+    /**
+     * Method sets hud alpha to 0 and clears scale filling.
+     */
 
     public clear(): void {
         this.setScale("scale", 0, 0);
@@ -100,17 +185,74 @@ abstract class EffectHud {
         }
     }
 
+    /**
+     * Method, defines condition to prevent init hud.
+     * @param playerUid number
+     * @returns condition
+     */
+
     public preventInit(playerUid: number): boolean {
         return this.lock == true;
     }
 
+    /**
+     * Method, calls when initialization was prevented.
+     * @param playerUid player unique identifier
+     */
+
     public onPreventInit(playerUid: number): void {};
+
+    /**
+     * Method, calls when hud was initialized.
+     * @param playerUid player unique identifier
+     */
+
     public onInit?(playerUid: number): void;
+
+    /**
+     * Method, works when thread works.
+     * @param playerUid player unique identifier
+     * @param effectData effect data of player
+     */
+
     public onThread?(playerUid: number, effectData: IEffectData): void;
+
+    /**
+     * Method, calls when hud was appeared.
+     * @param playerUid player unique identifier
+     * @param effectData effect data of player
+     */
+
     public onAppear?(playerUid: number, effectData: IEffectData): void;
+
+    /**
+     * Method, calls when hud was disappeared.
+     * @param playerUid player unique identifier
+     * @param effectData effect data of player
+     */
+
     public onDisappear?(playerUid: number, effectData: IEffectData): void;
+
+    /**
+     * Method, calls when hud was closed.
+     * @param playerUid player unique identifier
+     * @param effectData effect data of player
+     */
+
     public onClose(playerUid: number, effectData: IEffectData): void {};
+
+    /**
+     * Method, calls when hud full.
+     * @param playerUid player unique identifier
+     * @param effectData effect data of player
+     */
+
     public onFull(playerUid: number, effectData: IEffectData): void {};
+
+    /**
+     * Method, inits hud.
+     * @param playerUid player unique identifier
+     */
 
     public init(playerUid: number): void {
         if(this.preventInit(playerUid)) {
@@ -123,10 +265,14 @@ abstract class EffectHud {
 
         this.open();
         this.clear();
-
         this.thread = Threading.initThread("thread.effectbar.ui", () => this.run(playerUid));
     }
 
+    /**
+     * Method, sets height of hud elements.
+     * @param height height
+     */
+    
     public setHeight(height: number): void {
         const contentElements = this.getElements();
         const uiElements = this.UI.getElements();
@@ -137,9 +283,20 @@ abstract class EffectHud {
         return;
     }
 
+    /**
+     * Method, checks is valid height for hud with specified index.
+     * @param index number
+     * @returns condition
+     */
+
     public isValidHeightFor(index: number): boolean {
         return this.height <= this.getLocation().y + (this.getSpacing() * index);
     }
+
+    /**
+     * Method, realizes animation of replace positions.
+     * @param playerUid player unique identifier
+     */
 
     public animate(playerUid: number): void {
         if(this.index > 1 && EffectHud.positions.has(this.index - 1) == false) {
@@ -153,6 +310,11 @@ abstract class EffectHud {
         }
         return;
     }
+
+    /**
+     * Method, works in thread of hud.
+     * @param playerUid player unique identifier
+     */
 
     public run(playerUid: number): void {
         const threadSleepTime = this.getThreadSleepTime();
@@ -203,9 +365,18 @@ abstract class EffectHud {
         return;
     }
 
+    /**
+     * Method, increases {@link positions} size.
+     */
+
     public static increaseCount(): void {
         EffectHud.positions.add(EffectHud.positions.size + 1);
     }
+
+    /**
+     * Method, decreases {@link positions} size with delete value by specified index.
+     * @param index number
+     */
 
     public static decreaseCountBy(index: number): void {
         EffectHud.positions.delete(index);
@@ -220,6 +391,6 @@ Callback.addCallback("NativeGuiChanged", (screenName) => {
             hud.open();    
         } else {
             hud.close();
-        };
-    };
+        }
+    }
 });

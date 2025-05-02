@@ -11,7 +11,7 @@ Network.addServerPacket("packet.effectbar.command", (client, data: { args: strin
     if(client == null) return;
     const playerUid = client.getPlayerUid();
     if(!new PlayerActor(playerUid).isOperator()) {
-        client.sendMessage(Native.Color.RED + Translation.translate("message.effect.not_allowed"));
+        client.sendMessage(Native.Color.RED + Translation.translate("message.effectbar.not_allowed"));
     }
 
     const arguments = {
@@ -22,13 +22,16 @@ Network.addServerPacket("packet.effectbar.command", (client, data: { args: strin
     }
 
     const effect = Effect.get(data.args[1]);
+    if(!new PlayerActor(playerUid).isOperator()) {
+        return client.sendMessage(Native.Color.RED + Translation.translate("message.effectbar.not_allowed"));
+    }
     switch(arguments.action) {
         case "set": {
             if(effect == null) {
-                return client.sendMessage(Native.Color.RED + Translation.translate("message.effect.not_exists_effect").replace("%s", data.args[1]));
+                return client.sendMessage(Native.Color.RED + Translation.translate("message.effectbar.not_exists_effect").replace("%s", data.args[1]));
             }
             effect.init(playerUid, Number(arguments.progressMax) || effect.progressMax, Number(arguments.timerMax) || effect.timerMax);
-            return client.sendMessage(Native.Color.GREEN + Translation.translate("message.effect.effect_successfully_set").replace("%s", data.args[1]));
+            return client.sendMessage(Native.Color.GREEN + Translation.translate("message.effectbar.effect_successfully_set").replace("%s", data.args[1]));
         }
         case "clear": {
             if(!arguments.effectType) {

@@ -1,16 +1,51 @@
+/**
+ * Class to create your custom effects.
+ */
 class Effect implements IEffect {
+    /**
+     * Method to get empty data for effects. Use if {@link clearFor} method don't satisfies your needs
+     */
+
     public static getEmptyData = (): IEffectData => ({
         lock: false,
         progress: 0,
         progressMax: 100,
         timer: 0
     });
+
+    /**
+     * Object of all players with all their effects
+     */
+
     public static players: Record<number, Record<string, IEffectData>> = {};
+
+    /**
+     * List of all effects
+     */
+
     public static list: Record<string, Effect> = {};
-    
+
+    /**
+     * Progress max value of your effect in default.
+     */
+
     public readonly progressMax: number;
+
+    /**
+     * Timer max value of your effect in default.
+     */ 
+    
     public readonly timerMax?: number;
+
+    /**
+     * Your hud from {@link getHud} in field after create instance
+     */
+
     public hud: EffectHud;
+
+    /**
+     * @param prototype Prototype of your effect. Use if you don't use your extended {@link Effect} class.
+     */
 
     public constructor(prototype?: IEffect) {
         this.hud = this.getHud();
@@ -53,20 +88,67 @@ class Effect implements IEffect {
             this.init = prototype.init;
         }
     }
+
+    /**
+     * Method to get your effect type. Must be defined.
+     */
     
     public getType(): string {
         return null;
     }
 
+    /**
+     * Method to set field {@link hud} value. Must be defined.
+     */
+
     public getHud(): EffectHud {
         return null;
     }
 
-    public onFull(playerUid: number, data: IEffectData): void {};
-    public onIncrease(playerUid: number, data: IEffectData): void {};
-    public onDecrease(playerUid: number, data: IEffectData): void {};
-    public onInit?(playerUid: number, data: IEffectData): void;
-    public onEnd?(playerUid: number, data: IEffectData): void;
+    /**
+     * Method, calls when your scale effect is full.
+     * @param playerUid player unique identifier
+     * @param effectData effect data of player 
+     */
+
+    public onFull(playerUid: number, effectData: IEffectData): void {};
+
+    /**
+     * Method, calls when your scale effect is increasing.
+     * @param playerUid player unique identifier
+     * @param effectData effect data of player
+     */
+
+    public onIncrease(playerUid: number, effectData: IEffectData): void {};
+
+    /**
+     * Method, calls when your scale effect is decreasing.
+     * @param playerUid player unique identifier
+     * @param effectData effect data of player
+     */
+
+    public onDecrease(playerUid: number, effectData: IEffectData): void {};
+
+    /**
+     * Method, calls when you call init method.
+     * @param playerUid player unique identifier
+     * @param effectData effect data of player
+     */
+
+    public onInit?(playerUid: number, effectData: IEffectData): void;
+
+    /**
+     * Method, calls when effect go away.
+     * @param playerUid player unique identifier
+     * @param effectData effect data of player
+     */
+
+    public onEnd?(playerUid: number, effectData: IEffectData): void;
+
+    /**
+     * Method to init effect for player.
+     * @param playerUid player unique identifier
+     */
 
     protected initFor(playerUid: number): void {
         const client = Network.getClientForPlayer(playerUid);
@@ -76,6 +158,13 @@ class Effect implements IEffect {
             });
         }
     }
+
+    /**
+     * Method to init effect for player.
+     * @param playerUid player unique identifier
+     * @param progressMax progress max
+     * @param timerMax timer max
+     */
 
     public init(playerUid: number, progressMax?: number, timerMax?: number): void {
         timerMax = timerMax || this.timerMax || 5;
@@ -145,18 +234,30 @@ class Effect implements IEffect {
         return;
     }
 
+    /**
+     * Method to register your effect in {@link list}
+     * @param effect your effect or prototype
+     */
+
     public static register(effect: IEffect | Effect): Effect {
         const object = effect instanceof Effect ? effect : new Effect(effect);
         return Effect.list[object.getType()] = object;
     }
 
-    public static get<T extends Effect>(type: string): Nullable<T> {
-        return Effect.list[type] as T || null;
+    /**
+     * Method to get your effect by type;
+     */
+
+    public static get<T extends Effect>(effectType: string): Nullable<T> {
+        return Effect.list[effectType] as T || null;
     }
 
     /**
-     * Server function to get effect object;
+     * Method to get effect data for specified player
+     * @param playerUid player unique identifier
+     * @param effectType type of effect
      */
+
     public static getFor(playerUid: number, effectType: string): Nullable<IEffectData> {
         const player = Effect.players[playerUid];
 
@@ -167,9 +268,9 @@ class Effect implements IEffect {
     }
 
     /**
-     * Server function to update effect object;
-     * @param type of effect;
-     * @param data different data of effect; All is optional, e.g. it is assigning new data with previous data
+     * Method to update effect data about player on client side;
+     * @param effectType type of effect;
+     * @param effectData effect data of player. All is optional, e.g. it is assigning new data with previous data
      */
 
     public static sendFor(playerUid: number, effectType: string, effectData: Partial<IEffectData>) {
@@ -185,12 +286,25 @@ class Effect implements IEffect {
         return;
     }
 
+    /**
+     * Method to set effect data for specified player, if player exists in data.
+     * @param playerUid player unique identifier
+     * @param effectType type of effect
+     * @param effectData effect data of player
+     */
+
     public static setFor(playerUid: number, effectType: string, effectData: Partial<IEffectData>): void {
         const player = Effect.players[playerUid] ??= {};
 
         const previousData = player[effectType] || Effect.getEmptyData();
         player[effectType] = Object.assign(previousData, effectData);
     }
+
+    /**
+     * Method to clear effect data for specified player by server and client side.
+     * @param playerUid player unique identifier
+     * @param effectType type of effect
+     */
 
     public static clearFor(playerUid: number, effectType: string): void {
         Effect.setFor(playerUid, effectType, Effect.getEmptyData());
@@ -225,7 +339,7 @@ Callback.addCallback("LocalLevelLeft", () => {
     Effect.players = {};
 });
 
-Saver.addSavesScope("scope.effect", 
+Saver.addSavesScope("scope.effectbar", 
     function read(scope: typeof Effect.players) {
         scope = scope || Effect.players;
     }, 
@@ -235,6 +349,13 @@ Saver.addSavesScope("scope.effect",
 );
 
 namespace Callback {
+    /**
+     * Callback, calls when effect inits.
+     * @param playerUid player unique identifier
+     * @param progressMax max progress
+     * @param timerMax max timer
+     */
+    
     export declare interface EffectInit {
         (playerUid: number, progressMax?: number, timerMax?: number): void
     }

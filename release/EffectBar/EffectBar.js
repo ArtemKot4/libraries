@@ -13,26 +13,49 @@ LIBRARY({
  * Год основания: 2025
  * Вопросы можете задать в discord: discordapp.com/users/908847403073937419
  */ 
-Translation.addTranslation("message.effectlib.successfully_set", {
+Translation.addTranslation("message.effectbar.successfully_set", {
     en: "Effect %s successfully set",
     ru: "Эффект %s успешно установлен"
 });
-Translation.addTranslation("message.effectlib.successfully_remove", {
+Translation.addTranslation("message.effectbar.successfully_remove", {
     en: "Effect %s successfully cleared",
     ru: "Эффект %s успешно очищен"
 });
-Translation.addTranslation("message.effectlib.not_allowed", {
+Translation.addTranslation("message.effectbar.not_allowed", {
     en: "Not allowed",
     ru: "Нет доступа"
 });
-Translation.addTranslation("message.effectlib.not_exists_effect", {
+Translation.addTranslation("message.effectbar.not_exists_effect", {
     en: "Effect %s not exists",
     ru: "Эффект %s не существует"
 });
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+/**
+ * Class of effect hud.
+ */
 var EffectHud = /** @class */ (function () {
+    /**
+     * @param type effect type
+     */
     function EffectHud(type) {
         this.type = type;
+        /**
+         * Lock state.
+         */
         this.lock = false;
+        /**
+         * UI of hud. Opening without {@link open} opens empty white ui.
+         */
         this.UI = (function () {
             var window = new UI.Window();
             window.setAsGameOverlay(true);
@@ -40,29 +63,41 @@ var EffectHud = /** @class */ (function () {
             return window;
         })();
     }
+    ;
+    /**
+     * Method, defines sleep time to thread.
+     */
     EffectHud.prototype.getThreadSleepTime = function () {
         return 50;
     };
+    /**
+     * Method, defines spacing between hud. Usings by formula: ({@link getLocation getLocation().y } + {@link getSpacing getSpacing()} * index).
+     */
     EffectHud.prototype.getSpacing = function () {
         return 50;
     };
-    EffectHud.prototype.getLocation = function () {
-        return {};
-    };
-    EffectHud.prototype.getElements = function () {
-        return {};
-    };
+    /**
+     * Method, defines hud's background color.
+     * @default android.graphics.Color.TRANSPARENT
+     */
     EffectHud.prototype.getBackgroundColor = function () {
         return android.graphics.Color.TRANSPARENT;
     };
+    /**
+     * Method, builds and returns hud's window content by defined methods.
+     */
     EffectHud.prototype.getContent = function () {
         var elements = this.getElements();
         var location = this.getLocation();
+        if (!location) {
+            throw new java.lang.RuntimeException("Location of effect hud by type: \"".concat(this.type, "\" is not defined"));
+        }
+        if (!elements) {
+            throw new java.lang.RuntimeException("Elements of effect hud by type: \"".concat(this.type, "\" is not defined"));
+        }
         location.y += this.getSpacing() * EffectHud.positions.size;
         var content = {
-            location: {
-                x: location.x
-            },
+            location: __assign(__assign({}, location), { y: 0 }),
             drawing: [
                 {
                     type: "background",
@@ -78,9 +113,15 @@ var EffectHud = /** @class */ (function () {
         return content;
     };
     ;
+    /**
+     * Method to get opened state of window.
+     */
     EffectHud.prototype.isOpened = function () {
         return this.UI.isOpened();
     };
+    /**
+     * Method, opens ui with builded content and increases {@link positions} size.
+     */
     EffectHud.prototype.open = function () {
         if (this.isOpened())
             return;
@@ -93,30 +134,65 @@ var EffectHud = /** @class */ (function () {
         this.UI.open();
         return;
     };
+    /**
+     * Method, closes ui and decreases {@link positions} size by delete {@link index} value.
+     */
     EffectHud.prototype.close = function () {
         this.lock = false;
         this.UI.close();
         EffectHud.decreaseCountBy(this.index);
     };
+    /**
+     * Method set scale of hud.
+     * @param scale scale name
+     * @param value value
+     * @param max max value
+     */
     EffectHud.prototype.setScale = function (scale, value, max) {
         this.UI.getElements().get(scale).setBinding("value", value / max);
         return;
     };
+    /**
+     * Method sets hud alpha to 0 and clears scale filling.
+     */
     EffectHud.prototype.clear = function () {
         this.setScale("scale", 0, 0);
         if (this.isOpened()) {
             this.UI.layout.setAlpha(0);
         }
     };
+    /**
+     * Method, defines condition to prevent init hud.
+     * @param playerUid number
+     * @returns condition
+     */
     EffectHud.prototype.preventInit = function (playerUid) {
         return this.lock == true;
     };
+    /**
+     * Method, calls when initialization was prevented.
+     * @param playerUid player unique identifier
+     */
     EffectHud.prototype.onPreventInit = function (playerUid) { };
     ;
+    /**
+     * Method, calls when hud was closed.
+     * @param playerUid player unique identifier
+     * @param effectData effect data of player
+     */
     EffectHud.prototype.onClose = function (playerUid, effectData) { };
     ;
+    /**
+     * Method, calls when hud full.
+     * @param playerUid player unique identifier
+     * @param effectData effect data of player
+     */
     EffectHud.prototype.onFull = function (playerUid, effectData) { };
     ;
+    /**
+     * Method, inits hud.
+     * @param playerUid player unique identifier
+     */
     EffectHud.prototype.init = function (playerUid) {
         var _this = this;
         if (this.preventInit(playerUid)) {
@@ -127,8 +203,12 @@ var EffectHud = /** @class */ (function () {
         }
         this.open();
         this.clear();
-        this.thread = Threading.initThread("thread.effectlib.ui", function () { return _this.run(playerUid); });
+        this.thread = Threading.initThread("thread.effectbar.ui", function () { return _this.run(playerUid); });
     };
+    /**
+     * Method, sets height of hud elements.
+     * @param height height
+     */
     EffectHud.prototype.setHeight = function (height) {
         var contentElements = this.getElements();
         var uiElements = this.UI.getElements();
@@ -138,9 +218,18 @@ var EffectHud = /** @class */ (function () {
         }
         return;
     };
+    /**
+     * Method, checks is valid height for hud with specified index.
+     * @param index number
+     * @returns condition
+     */
     EffectHud.prototype.isValidHeightFor = function (index) {
         return this.height <= this.getLocation().y + (this.getSpacing() * index);
     };
+    /**
+     * Method, realizes animation of replace positions.
+     * @param playerUid player unique identifier
+     */
     EffectHud.prototype.animate = function (playerUid) {
         if (this.index > 1 && EffectHud.positions.has(this.index - 1) == false) {
             if (!this.isValidHeightFor(this.index - 1)) { //this.isValidHeightFor(this.index - 1) == false) {
@@ -154,6 +243,10 @@ var EffectHud = /** @class */ (function () {
         }
         return;
     };
+    /**
+     * Method, works in thread of hud.
+     * @param playerUid player unique identifier
+     */
     EffectHud.prototype.run = function (playerUid) {
         var threadSleepTime = this.getThreadSleepTime();
         while (true) {
@@ -195,12 +288,22 @@ var EffectHud = /** @class */ (function () {
         }
         return;
     };
+    /**
+     * Method, increases {@link positions} size.
+     */
     EffectHud.increaseCount = function () {
         EffectHud.positions.add(EffectHud.positions.size + 1);
     };
+    /**
+     * Method, decreases {@link positions} size with delete value by specified index.
+     * @param index number
+     */
     EffectHud.decreaseCountBy = function (index) {
         EffectHud.positions.delete(index);
     };
+    /**
+     * Set of positions opened huds. Need to work animation of replace positions.
+     */
     EffectHud.positions = new Set();
     return EffectHud;
 }());
@@ -214,11 +317,15 @@ Callback.addCallback("NativeGuiChanged", function (screenName) {
         else {
             hud.close();
         }
-        ;
     }
-    ;
 });
+/**
+ * Class to create your custom effects.
+ */
 var Effect = /** @class */ (function () {
+    /**
+     * @param prototype Prototype of your effect. Use if you don't use your extended {@link Effect} class.
+     */
     function Effect(prototype) {
         this.hud = this.getHud();
         if (!prototype) {
@@ -251,26 +358,57 @@ var Effect = /** @class */ (function () {
             this.init = prototype.init;
         }
     }
+    /**
+     * Method to get your effect type. Must be defined.
+     */
     Effect.prototype.getType = function () {
         return null;
     };
+    /**
+     * Method to set field {@link hud} value. Must be defined.
+     */
     Effect.prototype.getHud = function () {
         return null;
     };
-    Effect.prototype.onFull = function (playerUid, data) { };
+    /**
+     * Method, calls when your scale effect is full.
+     * @param playerUid player unique identifier
+     * @param effectData effect data of player
+     */
+    Effect.prototype.onFull = function (playerUid, effectData) { };
     ;
-    Effect.prototype.onIncrease = function (playerUid, data) { };
+    /**
+     * Method, calls when your scale effect is increasing.
+     * @param playerUid player unique identifier
+     * @param effectData effect data of player
+     */
+    Effect.prototype.onIncrease = function (playerUid, effectData) { };
     ;
-    Effect.prototype.onDecrease = function (playerUid, data) { };
+    /**
+     * Method, calls when your scale effect is decreasing.
+     * @param playerUid player unique identifier
+     * @param effectData effect data of player
+     */
+    Effect.prototype.onDecrease = function (playerUid, effectData) { };
     ;
+    /**
+     * Method to init effect for player.
+     * @param playerUid player unique identifier
+     */
     Effect.prototype.initFor = function (playerUid) {
         var client = Network.getClientForPlayer(playerUid);
         if (client) {
-            client.send("packet.effectlib.scale_open", {
+            client.send("packet.effectbar.scale_open", {
                 effectType: this.getType()
             });
         }
     };
+    /**
+     * Method to init effect for player.
+     * @param playerUid player unique identifier
+     * @param progressMax progress max
+     * @param timerMax timer max
+     */
     Effect.prototype.init = function (playerUid, progressMax, timerMax) {
         timerMax = timerMax || this.timerMax || 5;
         var type = this.getType();
@@ -323,15 +461,24 @@ var Effect = /** @class */ (function () {
         });
         return;
     };
+    /**
+     * Method to register your effect in {@link list}
+     * @param effect your effect or prototype
+     */
     Effect.register = function (effect) {
         var object = effect instanceof Effect ? effect : new Effect(effect);
         return Effect.list[object.getType()] = object;
     };
-    Effect.get = function (type) {
-        return Effect.list[type] || null;
+    /**
+     * Method to get your effect by type;
+     */
+    Effect.get = function (effectType) {
+        return Effect.list[effectType] || null;
     };
     /**
-     * Server function to get effect object;
+     * Method to get effect data for specified player
+     * @param playerUid player unique identifier
+     * @param effectType type of effect
      */
     Effect.getFor = function (playerUid, effectType) {
         var _a;
@@ -343,14 +490,14 @@ var Effect = /** @class */ (function () {
         return null;
     };
     /**
-     * Server function to update effect object;
-     * @param type of effect;
-     * @param data different data of effect; All is optional, e.g. it is assigning new data with previous data
+     * Method to update effect data about player on client side;
+     * @param effectType type of effect;
+     * @param effectData effect data of player. All is optional, e.g. it is assigning new data with previous data
      */
     Effect.sendFor = function (playerUid, effectType, effectData) {
         var client = Network.getClientForPlayer(playerUid);
         if (client) {
-            client.send("packet.effectlib.data_sync_for_client", {
+            client.send("packet.effectbar.data_sync_for_client", {
                 effectType: effectType,
                 playerUid: playerUid,
                 effectData: effectData
@@ -358,6 +505,12 @@ var Effect = /** @class */ (function () {
         }
         return;
     };
+    /**
+     * Method to set effect data for specified player, if player exists in data.
+     * @param playerUid player unique identifier
+     * @param effectType type of effect
+     * @param effectData effect data of player
+     */
     Effect.setFor = function (playerUid, effectType, effectData) {
         var _a;
         var _b;
@@ -365,17 +518,31 @@ var Effect = /** @class */ (function () {
         var previousData = player[effectType] || Effect.getEmptyData();
         player[effectType] = Object.assign(previousData, effectData);
     };
+    /**
+     * Method to clear effect data for specified player by server and client side.
+     * @param playerUid player unique identifier
+     * @param effectType type of effect
+     */
     Effect.clearFor = function (playerUid, effectType) {
         Effect.setFor(playerUid, effectType, Effect.getEmptyData());
         Effect.sendFor(playerUid, effectType, Effect.getEmptyData());
     };
+    /**
+     * Method to get empty data for effects. Use if {@link clearFor} method don't satisfies your needs
+     */
     Effect.getEmptyData = function () { return ({
         lock: false,
         progress: 0,
         progressMax: 100,
         timer: 0
     }); };
+    /**
+     * Object of all players with all their effects
+     */
     Effect.players = {};
+    /**
+     * List of all effects
+     */
     Effect.list = {};
     return Effect;
 }());
@@ -394,7 +561,7 @@ Callback.addCallback("ServerPlayerLoaded", function (playerUid) {
         Effect.sendFor(playerUid, effectType, effectData);
         if (effectData.lock === true && effectData.timer > 0 && effectData.progress > 0) {
             effectData.lock = false;
-            Network.getClientForPlayer(playerUid).send("packet.effectlib.hud_unlock", { effectType: effectType });
+            Network.getClientForPlayer(playerUid).send("packet.effectbar.hud_unlock", { effectType: effectType });
             Effect.get(effectType).init(playerUid, effectData.progressMax, effectData.timerMax);
         }
     }
@@ -402,39 +569,45 @@ Callback.addCallback("ServerPlayerLoaded", function (playerUid) {
 Callback.addCallback("LocalLevelLeft", function () {
     Effect.players = {};
 });
-Saver.addSavesScope("scope.effect", function read(scope) {
+Saver.addSavesScope("scope.effectbar", function read(scope) {
     scope = scope || Effect.players;
 }, function save() {
     return Effect.players || {};
 });
 var Callback;
 (function (Callback) {
+    /**
+     * Callback, calls when effect inits.
+     * @param playerUid player unique identifier
+     * @param progressMax max progress
+     * @param timerMax max timer
+     */
 })(Callback || (Callback = {}));
-Network.addClientPacket("packet.effectlib.data_sync_for_client", function (data) {
+Network.addClientPacket("packet.effectbar.data_sync_for_client", function (data) {
     Effect.players = Effect.players || {};
     Effect.players[data.playerUid] = Effect.players[data.playerUid] || {};
     return Effect.setFor(data.playerUid, data.effectType, data.effectData);
 });
-Network.addClientPacket("packet.effectlib.scale_open", function (data) {
+Network.addClientPacket("packet.effectbar.scale_open", function (data) {
     return Effect.get(data.effectType).hud.init(Player.getLocal());
 });
-Network.addClientPacket("packet.effectlib.hud_unlock", function (data) {
+Network.addClientPacket("packet.effectbar.hud_unlock", function (data) {
     Effect.get(data.effectType).hud.lock = false;
 });
 Callback.addCallback("NativeCommand", function (command) {
     if (command.startsWith("/effectbar")) {
         Game.prevent();
-        return Network.sendToServer("packet.effect.command", {
+        return Network.sendToServer("packet.effectbar.command", {
             args: command.split(" ").slice(1)
         });
     }
 });
-Network.addServerPacket("packet.effect.command", function (client, data) {
+Network.addServerPacket("packet.effectbar.command", function (client, data) {
     if (client == null)
         return;
     var playerUid = client.getPlayerUid();
     if (!new PlayerActor(playerUid).isOperator()) {
-        client.sendMessage(Native.Color.RED + Translation.translate("message.effect.not_allowed"));
+        client.sendMessage(Native.Color.RED + Translation.translate("message.effectbar.not_allowed"));
     }
     var arguments = {
         action: data.args[0],
@@ -443,24 +616,27 @@ Network.addServerPacket("packet.effect.command", function (client, data) {
         timerMax: data.args[3]
     };
     var effect = Effect.get(data.args[1]);
+    if (!new PlayerActor(playerUid).isOperator()) {
+        return client.sendMessage(Native.Color.RED + Translation.translate("message.effectbar.not_allowed"));
+    }
     switch (arguments.action) {
         case "set": {
             if (effect == null) {
-                return client.sendMessage(Native.Color.RED + Translation.translate("message.effect.not_exists_effect").replace("%s", data.args[1]));
+                return client.sendMessage(Native.Color.RED + Translation.translate("message.effectbar.not_exists_effect").replace("%s", data.args[1]));
             }
             effect.init(playerUid, Number(arguments.progressMax) || effect.progressMax, Number(arguments.timerMax) || effect.timerMax);
-            return client.sendMessage(Native.Color.GREEN + Translation.translate("message.effect.effect_successfully_set").replace("%s", data.args[1]));
+            return client.sendMessage(Native.Color.GREEN + Translation.translate("message.effectbar.effect_successfully_set").replace("%s", data.args[1]));
         }
         case "clear": {
             if (!arguments.effectType) {
                 for (var effectType in Effect.list) {
                     Effect.clearFor(playerUid, effectType);
-                    client.sendMessage(Native.Color.GREEN + Translation.translate("message.effectlib.successfully_remove").replace("%s", effectType));
+                    client.sendMessage(Native.Color.GREEN + Translation.translate("message.effectbar.successfully_remove").replace("%s", effectType));
                 }
                 return;
             }
             Effect.clearFor(playerUid, arguments.effectType);
-            client.sendMessage(Native.Color.GREEN + Translation.translate("message.effectlib.successfully_remove").replace("%s", arguments.effectType));
+            client.sendMessage(Native.Color.GREEN + Translation.translate("message.effectbar.successfully_remove").replace("%s", arguments.effectType));
             return;
         }
     }
