@@ -1,13 +1,13 @@
 Callback.addCallback("NativeCommand", (command) => {
     if(command.startsWith("/effectbar")) {
         Game.prevent();
-        return Network.sendToServer("packet.effect.command", {
+        return Network.sendToServer("packet.effectbar.command", {
             args: command.split(" ").slice(1)
         });
     }
 });
 
-Network.addServerPacket("packet.effect.command", (client, data: { args: string[] }) => {
+Network.addServerPacket("packet.effectbar.command", (client, data: { args: string[] }) => {
     if(client == null) return;
     const playerUid = client.getPlayerUid();
     if(!new PlayerActor(playerUid).isOperator()) {
@@ -34,12 +34,12 @@ Network.addServerPacket("packet.effect.command", (client, data: { args: string[]
             if(!arguments.effectType) {
                 for(const effectType in Effect.list) {
                     Effect.clearFor(playerUid, effectType);
-                    client.sendMessage(Native.Color.GREEN + Translation.translate("message.effectlib.successfully_remove").replace("%s", effectType));
+                    client.sendMessage(Native.Color.GREEN + Translation.translate("message.effectbar.successfully_remove").replace("%s", effectType));
                 }
                 return;
             }
             Effect.clearFor(playerUid, arguments.effectType);
-            client.sendMessage(Native.Color.GREEN + Translation.translate("message.effectlib.successfully_remove").replace("%s", arguments.effectType));
+            client.sendMessage(Native.Color.GREEN + Translation.translate("message.effectbar.successfully_remove").replace("%s", arguments.effectType));
             return;
         }
     }

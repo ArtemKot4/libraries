@@ -71,7 +71,7 @@ class Effect implements IEffect {
     protected initFor(playerUid: number): void {
         const client = Network.getClientForPlayer(playerUid);
         if(client) {
-            client.send("packet.effectlib.scale_open", {
+            client.send("packet.effectbar.scale_open", {
                 effectType: this.getType()
             });
         }
@@ -176,7 +176,7 @@ class Effect implements IEffect {
         const client = Network.getClientForPlayer(playerUid);
 
         if(client) {
-            client.send("packet.effectlib.data_sync_for_client", {
+            client.send("packet.effectbar.data_sync_for_client", {
                 effectType: effectType,
                 playerUid: playerUid,
                 effectData: effectData
@@ -215,7 +215,7 @@ Callback.addCallback("ServerPlayerLoaded", (playerUid) => {
         Effect.sendFor(playerUid, effectType, effectData);
         if(effectData.lock === true && effectData.timer > 0 && effectData.progress > 0) {
             effectData.lock = false;
-            Network.getClientForPlayer(playerUid).send("packet.effectlib.hud_unlock", { effectType });
+            Network.getClientForPlayer(playerUid).send("packet.effectbar.hud_unlock", { effectType });
             Effect.get(effectType).init(playerUid, effectData.progressMax, effectData.timerMax);
         }
     }

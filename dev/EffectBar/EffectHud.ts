@@ -124,7 +124,7 @@ abstract class EffectHud {
         this.open();
         this.clear();
 
-        this.thread = Threading.initThread("thread.effectlib.ui", () => this.run(playerUid));
+        this.thread = Threading.initThread("thread.effectbar.ui", () => this.run(playerUid));
     }
 
     public setHeight(height: number): void {
