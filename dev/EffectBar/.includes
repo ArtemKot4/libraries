@@ -1,0 +1,10 @@
+# lib: esnext
+header.ts
+translations.js
+IEffectData.ts
+EffectHud.ts
+IEffect.ts
+Effect.ts
+network.ts
+EffectlibCommand.ts
+export.ts
