@@ -232,7 +232,7 @@ var EffectHud = /** @class */ (function () {
      */
     EffectHud.prototype.animate = function (playerUid) {
         if (this.index > 1 && EffectHud.positions.has(this.index - 1) == false) {
-            if (!this.isValidHeightFor(this.index - 1)) { //this.isValidHeightFor(this.index - 1) == false) {
+            if (!this.isValidHeightFor(this.index - 1)) {
                 this.setHeight(this.height -= 2);
             }
             else {

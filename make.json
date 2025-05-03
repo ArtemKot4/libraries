@@ -1,4 +1,5 @@
 {
+    "$schema": "https://raw.githubusercontent.com/zheka2304/innercore-mod-toolchain/develop/toolchain/schemas/make.schema.json",
 	"resources": [
 		{
 			"path": "assets",
@@ -12,7 +13,7 @@
 			"path": "assets/gui",
 			"type": "gui"
 		}
-	],
+	], 
 	"sources": [
 		{
 			"source": "code",
@@ -26,9 +27,16 @@
 			"language": "javascript"
 		},
 		{
-			"source": "dev/*",
+			"source": "dev/EffectBar",
 			"type": "library",
-			"language": "typescript"
+			"language": "typescript",
+            "target": "../../release/EffectBar/EffectBar.js"
+		},
+        {
+			"source": "dev/Notification",
+			"type": "library",
+			"language": "typescript",
+            "target": "../../release/Notification/Notification.js"
 		}
 	],
 	"additional": [

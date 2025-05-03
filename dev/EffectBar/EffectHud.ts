@@ -300,7 +300,7 @@ abstract class EffectHud {
 
     public animate(playerUid: number): void {
         if(this.index > 1 && EffectHud.positions.has(this.index - 1) == false) {
-            if(!this.isValidHeightFor(this.index - 1)) {//this.isValidHeightFor(this.index - 1) == false) {
+            if(!this.isValidHeightFor(this.index - 1)) {
                 this.setHeight(this.height -= 2);
             } else {
                 EffectHud.decreaseCountBy(this.index);

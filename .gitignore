@@ -28,3 +28,4 @@ package-lock.json
 package.json
 java/manifest
 .classpath
+/declarations
