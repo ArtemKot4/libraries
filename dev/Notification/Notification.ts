@@ -8,11 +8,11 @@
         protected onInit(style: INotificationStyle, runtimeStyle: INotificationRuntimeParams, description: INotificationWindowData): void {
             this.mark = false;
             this.UI.layout.setAlpha(0);
-        };
+        }
 
         public setAlpha(value: number): void {
             this.UI.layout.setAlpha(value);
-        };
+        }
 
         protected run(style: INotificationStyle, runtimeStyle: INotificationRuntimeParams, data: INotificationWindowData): boolean {
             const alpha = this.UI.layout.getAlpha();
@@ -22,8 +22,8 @@
                 if(!this.mark) {
                     this.mark = true;
                     java.lang.Thread.sleep(data.waitTime);
-                };
-            };
+                }
+            }
             if(this.mark) {
                 this.setAlpha(alpha - 0.01);
                 if(alpha <= 0) {
@@ -31,14 +31,14 @@
                     this.close();
 
                     return true;
-                };
-            };
-        };      
-    };
+                }
+            }
+        }   
+    }
 
     Notification.register("transparent", new TransparentNotification());
 
-    namespace ENotificationStyle {
+    namespace NotificationStyles {
         export const TRANSPARENT: INotificationStyle = {
             waitTime: 2000,
             queueTime: 1000,
@@ -79,9 +79,9 @@
                 y: 10,
             }
         };
-    };
+    }
 
-    Notification.get("transparent").addStyle("transparent", ENotificationStyle.TRANSPARENT);
+    Notification.get("transparent").addStyle("transparent", NotificationStyles.TRANSPARENT);
 
     Callback.addCallback("ItemUse", function(c, item, b, isE, player) {
         const obj = {
@@ -120,7 +120,7 @@ abstract class Notification {
 
     public constructor(type?: string) {
         if(type) this.type = type;  
-    };
+    }
 
     /**
      * Method to add client packet, which can init animation for client from server request.
@@ -130,18 +130,6 @@ abstract class Notification {
         Network.addClientPacket(`packet.notification.send_${this.type}_notification`, (data: INotificationInputData) => {
             return this.init(data.styleName, data.runtimeStyle);
         });
-    };
-
-    /**
-     * Method to get specified Notification by type. {@link AchievementNotification} for example can be got with Notification.{@link get}("achievement")
-     * @param type type of the notification
-     */
-
-    public static get<T extends Notification>(type: string): T {
-        if(!(type in this.list)) {
-            throw new java.lang.NoSuchFieldException("Notification: notification not found");
-        };
-        return this.list[type] as T;
     }
 
     /**
@@ -212,14 +200,14 @@ abstract class Notification {
     }
 
     public getQueueTime(): number {
-        return 1000
+        return 1000;
     }
 
     public getWaitTime(): number {
         return 2000;
     }
 
-    protected getDescription(style: INotificationStyle, runtimeStyle: INotificationRuntimeParams): INotificationWindowData {
+    protected getWindowData(style: INotificationStyle, runtimeStyle: INotificationRuntimeParams): INotificationWindowData {
         const scale = runtimeStyle.scale || style.scale || this.getScale();
         const width = (runtimeStyle.width || style.width || this.getWidth()) * scale;
         const height = (runtimeStyle.height || style.height || this.getHeight()) * scale;
@@ -297,7 +285,7 @@ abstract class Notification {
 
     public preventInit(styleName: string, runtimeStyle: INotificationRuntimeParams): boolean {
         return this.lock == true || screenName !== "in_game_play_screen";
-    };
+    }
 
     public onPreventInit(styleName: string, runtimeStyle: INotificationRuntimeParams): void {
         this.queue.push({ styleName: styleName, runtimeStyle: runtimeStyle });
@@ -323,7 +311,7 @@ abstract class Notification {
         }
 
         const style = this.getStyle(styleName);
-        const description = this.getDescription(style, runtimeStyle);
+        const description = this.getWindowData(style, runtimeStyle);
 
         if(!this.UI.isOpened()) {
             this.UI.open();
@@ -416,15 +404,27 @@ abstract class Notification {
         this.UI.close();
     }
 
+    /**
+     * Method to get specified Notification by type. {@link AchievementNotification} for example can be got with Notification.{@link get}("achievement")
+     * @param type type of the notification
+     */
+
+    public static get<T extends Notification>(type: string): T {
+        if(!(type in this.list)) {
+            throw new java.lang.NoSuchFieldException("Notification: notification not found");
+        }
+        return this.list[type] as T;
+    }
+
     public static register(type: string, notification: Notification): Notification {
         if(type in Notification.list) {
             throw new java.lang.SecurityException("Notification: notification is already registered");
-        };
+        }
 
         if(!notification.type) {
             notification.type = type;
             notification.buildPacket();
-        };
+        }
 
         return Notification.list[type] = notification;
     }
@@ -472,23 +472,25 @@ namespace NotificationStyles {
             y: 10
         }
     };
-};
+}
 
-// Callback.addCallback("ItemUse", function(c, item, b, isE, player) {
-//     const obj = {
-//         text: {
-//             type: "text",
-//             text: Item.getName(item.id, item.data)
-//         },
-//         icon: {
-//             type: "image",
-//             item: item.id
-//         }
-//     } as INotificationRuntimeParams;
+/*
+Callback.addCallback("ItemUse", function(c, item, b, isE, player) {
+    const obj = {
+        text: {
+            type: "text",
+            text: Item.getName(item.id, item.data)
+        },
+        icon: {
+            type: "image",
+            item: item.id
+        }
+    } as INotificationRuntimeParams;
 
-//     if(Entity.getSneaking(player)) {
-//         Notification.get("achievement").sendFor(player, "transparent", obj);
-//     } else {
-//         Notification.get("transparent").sendFor(player, "transparent", obj);
-//     };
-// }); //debug
+    if(Entity.getSneaking(player)) {
+        Notification.get("achievement").sendFor(player, "transparent", obj);
+    } else {
+        Notification.get("transparent").sendFor(player, "transparent", obj);
+    };
+}); //example debug
+*/

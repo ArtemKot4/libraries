@@ -1,0 +1,10 @@
+# lib: esnext
+header.ts
+translations.js
+ICommandParams.ts
+Command.ts
+ClientCommand.ts
+ServerCommand.ts
+ListCommand.ts
+NativeCommand.ts
+export.ts

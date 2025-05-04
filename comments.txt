@@ -1,0 +1,12 @@
+{
+ 	"source": "dev/EffectBar",
+ 	"type": "library",
+ 	"language": "typescript",
+    "target": "../../release/EffectBar/EffectBar.js"
+},
+{
+   	"source": "dev/Notification",
+   	"type": "library",
+   	"language": "typescript",
+    "target": "../../release/Notification/Notification.js"
+},

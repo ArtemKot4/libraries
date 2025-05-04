@@ -26,17 +26,11 @@
 			"type": "launcher",
 			"language": "javascript"
 		},
-		{
-			"source": "dev/EffectBar",
-			"type": "library",
-			"language": "typescript",
-            "target": "../../release/EffectBar/EffectBar.js"
-		},
         {
-			"source": "dev/Notification",
+			"source": "dev/Command",
 			"type": "library",
 			"language": "typescript",
-            "target": "../../release/Notification/Notification.js"
+            "target": "../../release/Command/Command.js"
 		}
 	],
 	"additional": [
