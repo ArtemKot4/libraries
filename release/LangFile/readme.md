@@ -80,6 +80,12 @@ alert(Translation.translate("mod.author")) // I am Steve
 
 Тут мы зарегистрировали наши переводы, и теперь можем узнать их.
 
+Если вы не хотите сохранять переводы в переменную или просто сразу же зарегистрировать, можете использовать статический метод LangFile.registerTranslationsFrom.
+
+```javascript
+LangFile.registerTranslationsFrom(__dir__ + "resources/assets/lang/en.lang", "en", "//");
+```
+
 #### Получение значений переменных:
 
 ```javascript
