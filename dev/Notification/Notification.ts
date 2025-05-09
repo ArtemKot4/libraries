@@ -14,7 +14,7 @@
             this.UI.layout.setAlpha(value);
         }
 
-        protected run(style: INotificationStyle, runtimeStyle: INotificationRuntimeParams, data: INotificationWindowData): boolean {
+        protected work(style: INotificationStyle, runtimeStyle: INotificationRuntimeParams, data: INotificationWindowData): boolean {
             const alpha = this.UI.layout.getAlpha();
             if(alpha < 1 && !this.mark) {
                 this.setAlpha(alpha + 0.01);

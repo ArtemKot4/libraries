@@ -31,6 +31,12 @@
 			"type": "library",
 			"language": "typescript",
             "target": "../../release/Command/Command.js"
+		},
+        {
+			"source": "dev/LangFile",
+			"type": "library",
+			"language": "typescript",
+            "target": "../../release/LangFile/LangFile.js"
 		}
 	],
 	"additional": [
