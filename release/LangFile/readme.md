@@ -39,7 +39,7 @@ mod.author = I am Steve
 
 ```lang
 mod.authors = `I am Steve
-I am Alex` #просто комментарий
+I am Henry` #просто комментарий
 ```
 
 ##### Комментарии
