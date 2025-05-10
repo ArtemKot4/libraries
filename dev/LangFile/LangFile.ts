@@ -1,3 +1,54 @@
+interface ILangSettings {
+    /**
+     * Language
+     */
+    lang?: string,
+    /**
+     * Concats lines with \n, if you use multiline format of value
+     */
+    concatMultiline?: boolean,
+    /**
+     * Enables more of performances. If it's false, it will parse faster, but considerings only inline comments.
+     @default false
+     */
+    parseAdvanced?: boolean,
+    /**
+     * Format of comments
+     */
+    commentFormat?: {
+        /**
+         * @default #
+         */
+        inline?: string
+        /**
+         * @default #->
+         */
+        start?: string,
+        /**
+         * @default <-#
+         */
+        end?: string
+    },
+    /**
+     * Char to embed multiline
+     * @default `
+     */
+    multilineChar?: string,
+    /**
+     * Char to embed keywords
+     */
+    keywordEmbedding?: {
+        /**
+         * @default ${
+         */
+        start: string,
+        /**
+         * @default }
+         */
+        end: string
+    }
+}
+
 /**
  * Class to read, manipulate and register translations from .lang files in defined format from library.
  * @example
@@ -12,7 +63,10 @@
    ```
    ```javascript
    //in mod
-   const langFile = new LangFile("path/to/file.lang", "en", "//");
+   const langFile = new LangFile("path/to/file.lang", {
+        lang: "en",
+        parseAdvanced: true
+   });
    Game.message(JSON.stringify(langFile.keywords)); 
    //{
    //"rocketTier": "1 tier", 
@@ -27,136 +81,237 @@
    alert(Translation.translate("mod.rocket")) // I am rocket from mod and my tier is 1 tier
    ```
  */
+
 class LangFile {
-    /**
-     * List of supports languages
+	/**
+	 * List of supports languages
+	 */
+	public static readonly langs: string[] = ["ru", "en", "uk", "kz"];
+
+	/**
+	 * String from file
+	 */
+
+	public readonly file: string;
+
+	/**
+	 * Settings to parse
      */
-    public static readonly langs: string[] = ["ru", "en", "uk", "kz"];
-    /**
-     * Language
+
+	public settings: ILangSettings;
+
+	/**
+	 * Entries in {[key: string]: string} format
+	 */
+
+	public entries: Record<string, string> = {};
+
+	/**
+	 * Keywords in {[key: string]: string} format
+	 */
+
+	public keywords: Record<string, string> = {};
+
+	/**
+	 * @param path file path
+     * @param settings parse settings
      */
-    public readonly lang: string;
+
+	public constructor(public path: string, settings: ILangSettings) {
+        settings = settings || {};
+
+		if(!LangFile.langs.includes(settings.lang)) {
+			throw new Error(`Wrong language "${settings.lang}" format`);
+		}
+		const file = FileTools.ReadText(path);
+		if(file == null) {
+			throw new Error(`File from path "${path}" is not found`);
+		}
+
+        settings.parseAdvanced = settings.parseAdvanced || true;
+        settings.commentFormat = settings.commentFormat || {};
+        settings.commentFormat.inline = settings.commentFormat.inline || "#";
+        settings.commentFormat.start = settings.commentFormat.start || "<-#";
+        settings.commentFormat.end = settings.commentFormat.end || "#->";
+        settings.keywordEmbedding = settings.keywordEmbedding || {
+            start: "${",
+            end: "}"
+        };
+        settings.concatMultiline = settings.concatMultiline || true;
+        settings.multilineChar = settings.multilineChar || "`";
+		this.file = file;
+
+		if(settings.parseAdvanced == true) {
+			this.parseAdvanced();
+		} else {
+			this.parse();
+		}
+	}
+
+	/**
+	 * Method to get entry [key, value] without comments.
+	 * @param line line
+	 * @param separator separator between key and value
+	 */
+
+	protected getEntry(line: string, separator: string): string[] {
+		return line.split(separator).map((v) => v.split(this.settings.commentFormat.inline)[0].trim());
+	}
+
     /**
-     * String from file
+     * Method to default parse file.
      */
-    public readonly file: string;
+
+	protected parse(): void {
+		const entries = {};
+		const splited = this.file.split("\n");
+		for (const i in splited) {
+			const line = splited[i].trim();
+			const [key, value] = this.getEntry(line, "=");
+
+			if (line.length == 0 || line.startsWith(this.settings.commentFormat.inline)) {
+				continue;
+			}
+
+			entries[key] = value;
+		}
+	}
+
+	/**
+	 * Method to advanced parse file.
+	 */
+
+	protected parseAdvanced(): void {
+		const entries = {};
+		const keywords = {};
+		const splited = this.file.split("\n");
+		let commentIndex = null;
+		let longString = null;
+
+		for(const i in splited) {
+			let line = splited[i];
+			if(line.startsWith(this.settings.commentFormat.inline)) {
+				continue;
+			}
+
+			if(longString == null) {
+				line = line.trim();
+				if(line.length == 0) {
+					continue;
+				}
+				const stringSymbol = line.indexOf(this.settings.multilineChar);
+				if(stringSymbol != -1) {
+					longString = line;
+					continue;
+				}
+			}
+
+			if(longString != null) {
+				const stringSymbol = line.indexOf(this.settings.multilineChar);
+				if(stringSymbol != -1) {
+					longString += line.slice(longString);
+					line = longString.replaceAll(this.settings.multilineChar, "");
+					longString = null;
+				} else {
+					longString += line + this.settings.concatMultiline ? "\n" : "";
+
+					continue;
+				}
+			}
+
+			if(commentIndex != null) {
+				const commentEnd = line.indexOf(this.settings.commentFormat.end);
+				if(commentEnd == -1) {
+					continue;
+				}
+				line = line.slice(commentEnd + this.settings.commentFormat.end.length);
+				commentIndex = null;
+			}
+
+			if(!line.includes("=") && line.includes(":")) {
+				const [key, value] = this.getEntry(line, ":");
+				keywords[key] = value;
+				continue;
+			}
+
+			const commentStart = line.indexOf(this.settings.commentFormat.start);
+			if(commentIndex == null && commentStart != -1) {
+				line = line.slice(0, commentStart);
+				commentIndex = i;
+			}
+
+			if(line.includes(":=")) {
+				const [key, value] = this.getEntry(line, ":=");
+				keywords[key] = value;
+				entries[key] = value;
+				continue;
+			}
+
+			if(!line.includes("=")) {
+				continue;
+			}
+
+			let [key, value] = this.getEntry(line, "=");
+
+			if(!value) {
+				throw new Error(`Wrong value from key: "${key}"`);
+			}
+
+			if(value.includes(this.settings.keywordEmbedding.start)) {
+				let index = 0;
+				while(index < value.length) {
+					const lastStart = value.indexOf(this.settings.keywordEmbedding.start, index);
+					if(lastStart == -1) {
+						break;
+					}
+
+					const lastEnd = value.indexOf(this.settings.keywordEmbedding.end, lastStart);
+					if(lastEnd == -1) {
+						throw new Error(`Wrong construction ${this.settings.keywordEmbedding.start} [keyword] ${this.settings.keywordEmbedding.end}`);
+					}
+
+					const keyName = value.slice(lastStart + (this.settings.keywordEmbedding.start.length), lastEnd);
+					const replacement = keywords[keyName];
+					if(replacement != undefined) {
+						value = value.slice(0, lastStart) + replacement + value.slice(lastEnd + 1);
+					}
+					index = lastStart + replacement.length || 0;
+				}
+			}
+			entries[key] = value;
+		}
+		this.entries = entries;
+		this.keywords = keywords;
+	}
+
+	/**
+	 * Method to register translations.
+	 */
+
+	public registerTranslations(): void {
+		for(const key in this.entries) {
+			Translation.addTranslation(key, {
+				[this.settings.lang]: this.entries[key],
+			});
+		}
+	}
+
     /**
-     * Comment format
-     * @default //
+     * Method to register translations from file.
+     * @param path path
+     * @param settings parse settings
      */
-    public commentFormat: string;
-    /**
-     * Entries in {[key: string]: string} format
-     */
-    public entries: Record<string, string> = {};
-    /**
-     * Keywords in {[key: string]: string} format
-     */
-    public keywords: Record<string, string> = {};
-    /**
-     * @param path file path
-     * @param lang file language
-     * @param commentFormat comment format
-     */
-    public constructor(path: string, lang: string = "en", commentFormat?: string) {
-        if(!LangFile.langs.includes(lang)) {
-            throw new Error("Wrong language format");
-        }
-        const file = FileTools.ReadText(path);
-        if(file == null) {
-            throw new Error(`File from path "${path}" is not found`);
-        }
-        this.lang = lang;
-        this.commentFormat = commentFormat || "//";
-        this.file = file;
-        this.parse()
-    }
-    /**
-     * Method to get entries without comments
-     * @param line line
-     * @param separator separator between key and value
-     */
-    protected getEntry(line: string, separator: string): string[] {
-        return line.split(separator).map((v) => v.split(this.commentFormat)[0].trim());
-    }
-    /**
-     * Parse file
-     */
-    protected parse(): void {
-        const entries = {};
-        const keywords = {};
-        const splited = this.file.split("\n");
 
-        for (const i in splited) {
-            const line = splited[i].trim();
-
-            if(line.length == 0) {
-                continue;
-            }
-
-            if(line.startsWith(this.commentFormat)) {
-                continue;
-            }
-
-            if(!line.includes("=") && line.includes(":")) {
-                const [key, value] = this.getEntry(line, ":");
-                keywords[key] = value;
-                continue;
-            }
-
-            if(line.includes(":=")) {
-                const [key, value] = this.getEntry(line, ":=");
-                keywords[key] = value;
-                entries[key] = value;
-                continue;
-            }
-
-            if(!line.includes("=")) {
-                continue;
-            }
-
-            let [key, value] = this.getEntry(line, "=");
-
-            if(value.includes("${")) {
-                let index = 0;
-                while(index < value.length) {
-                    const lastStart = value.indexOf("${", index);
-                    if(lastStart == -1) {
-                        break;
-                    }
-
-                    const lastEnd = value.indexOf("}", lastStart);
-                    if(lastEnd == -1) {
-                        throw new Error("Wrong construction ${ [keyword] }");
-                    }
-
-                    const keyName = value.slice(lastStart + 2, lastEnd);
-                    const replacement = keywords[keyName];
-                    if(replacement != undefined) {
-                        value = value.slice(0, lastStart) + replacement + value.slice(lastEnd + 1);
-                    }
-                    index = lastStart + replacement.length || 0;
-                }
-            }
-            entries[key] = value;
-        }
-        this.entries = entries;
-        this.keywords = keywords;
-    }
-    /**
-     * Register translations
-     */
-    public registerTranslations(): void {
-        for(const key in this.entries) {
-            Translation.addTranslation(key, {
-                [this.lang]: this.entries[key]
-            })
-        }
-    }
-
-    public static registerTranslationsFrom(path: string, lang: string, commentFormat?: string): LangFile {
-        const file = new LangFile(path, lang, commentFormat);
-        file.registerTranslations();
-        return file;
-    }
+	public static registerTranslationsFrom(path: string, settings?: ILangSettings): LangFile {
+		const file = new LangFile(path, settings);
+		file.registerTranslations();
+		return file;
+	}
 }
+
+/*
+const file = "" +
+"aboba:= абоба" + "\n" +
+"hi = `привет " + "\n"  + " ${aboba} " + "и не только`//hehe" + "\n" +
+"as = 1" + "and heh";
+*/
