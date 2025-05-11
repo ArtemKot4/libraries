@@ -96,7 +96,7 @@ interface ILangSettings {
     /**
      * Language
      */
-    lang?: string,
+    lang?: "ru" | "en" | "uk" | "kz" | "es" | "pt" | "zh",
     /**
      * Concats lines with \n, if you use multiline format of value
      * @default true
@@ -185,7 +185,7 @@ Game.message(JSON.stringify(langFile.entries)); /*
 {
   "mod.info": "Я мод, написанный для игры Minecraft, версии 10",
   "mod.apple": "\u00A7f яблоко",
-  "mod.authors": "I am Steve\nI am Alex",
+  "mod.authors": "I am Steve\nI am Henry",
   "mod.theme": "Магия",
   "mod.game": "Minecraft"
 }
