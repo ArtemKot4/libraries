@@ -54,7 +54,7 @@ class LangFile {
 	/**
 	 * List of supports languages
 	 */
-    
+
 	public static readonly langs = <const>["ru", "en", "uk", "kz", "es", "pt", "zh"];
 
 	/**
@@ -93,11 +93,11 @@ class LangFile {
 	 */
     
 	public constructor(path: string, settings: ILangSettings = {}) {
-		if (!LangFile.langs.includes(settings.lang)) {
+		if(!LangFile.langs.includes(settings.lang)) {
 			throw new Error(`Wrong language "${settings.lang}" format`);
 		}
 		const file = FileTools.ReadText(path);
-		if (file == null) {
+		if(file == null) {
 			throw new Error(`File from path "${path}" is not found`);
 		}
 
@@ -107,7 +107,7 @@ class LangFile {
 		settings.commentFormat.inline = settings.commentFormat.inline || "#";
 		this.file = file;
 
-		if (settings.parseAdvanced == true) {
+		if(settings.parseAdvanced == true) {
 			this.keywords = {};
 			settings.commentFormat.start = settings.commentFormat.start || "<-#";
 			settings.commentFormat.end = settings.commentFormat.end || "#->";
@@ -135,7 +135,7 @@ class LangFile {
 		const entry = line.split(separator).map((v) => v.split(this.settings.commentFormat.inline)[0].trim());
 
 		const index = entry.findIndex((v) => !v);
-		if (index != -1) {
+		if(index != -1) {
 			throw new Error(`Not valid format of ${index == 0 ? "key" : "value"} at line "${line}"`);
 		}
 		return entry;
@@ -147,11 +147,11 @@ class LangFile {
 
 	protected parse(): void {
 		const lines = this.file.split("\n");
-		for (const i in lines) {
+		for(const i in lines) {
 			const line = lines[i].trim();
 			const [key, value] = this.getEntry(line, "=");
 
-			if (line.length == 0 || line.startsWith(this.settings.commentFormat.inline)) {
+			if(line.length == 0 || line.startsWith(this.settings.commentFormat.inline)) {
 				continue;
 			}
 
@@ -168,27 +168,27 @@ class LangFile {
 		let commentIndex = null;
 		let longString = null;
 
-		for (const i in lines) {
+		for(const i in lines) {
 			let line = lines[i];
-			if (line.startsWith(this.settings.commentFormat.inline)) {
+			if(line.startsWith(this.settings.commentFormat.inline)) {
 				continue;
 			}
 
-			if (longString == null) {
+			if(longString == null) {
 				line = line.trim();
-				if (line.length == 0) {
+				if(line.length == 0) {
 					continue;
 				}
 				const stringSymbol = line.indexOf(this.settings.multilineChar);
-				if (stringSymbol != -1) {
+				if(stringSymbol != -1) {
 					longString = line + (this.settings.concatMultiline ? "\n" : "");
 					continue;
 				}
 			}
 
-			if (longString != null) {
+			if(longString != null) {
 				const stringSymbol = line.indexOf(this.settings.multilineChar);
-				if (stringSymbol != -1) {
+				if(stringSymbol != -1) {
 					longString += line.substring(longString);
 					line = longString.replaceAll(this.settings.multilineChar, "");
 					longString = null;
@@ -198,56 +198,56 @@ class LangFile {
 				}
 			}
 
-			if (commentIndex != null) {
+			if(commentIndex != null) {
 				const commentEnd = line.indexOf(this.settings.commentFormat.end);
-				if (commentEnd == -1) {
+				if(commentEnd == -1) {
 					continue;
 				}
 				line = line.substring(commentEnd + this.settings.commentFormat.end.length);
 				commentIndex = null;
 			}
 
-			if (!line.includes("=") && line.includes(":")) {
+			if(!line.includes("=") && line.includes(":")) {
 				const [key, value] = this.getEntry(line, ":");
 				this.keywords[key] = value;
 				continue;
 			}
 
 			const commentStart = line.indexOf(this.settings.commentFormat.start);
-			if (commentIndex == null && commentStart != -1) {
+			if(commentIndex == null && commentStart != -1) {
 				line = line.substring(0, commentStart);
 				commentIndex = i;
 			}
 
-			if (line.includes(":=")) {
+			if(line.includes(":=")) {
 				const [key, value] = this.getEntry(line, ":=");
 				this.keywords[key] = value;
 				this.entries[key] = value;
 				continue;
 			}
 
-			if (!line.includes("=")) {
+			if(!line.includes("=")) {
 				continue;
 			}
 
 			let [key, value] = this.getEntry(line, "=");
 
-			if (value.includes(this.settings.keywordEmbedding.start)) {
+			if(value.includes(this.settings.keywordEmbedding.start)) {
 				let index = 0;
-				while (index < value.length) {
+				while(index < value.length) {
 					const lastStart = value.indexOf(this.settings.keywordEmbedding.start, index);
-					if (lastStart == -1) {
+					if(lastStart == -1) {
 						break;
 					}
 
 					const lastEnd = value.indexOf(this.settings.keywordEmbedding.end, lastStart);
-					if (lastEnd == -1) {
+					if(lastEnd == -1) {
 						throw new Error(`Wrong construction ${this.settings.keywordEmbedding.start} [keyword] ${this.settings.keywordEmbedding.end}`);
 					}
 
 					const keyName = value.substring(lastStart + this.settings.keywordEmbedding.start.length, lastEnd);
 					const keyValue = this.keywords[keyName];
-					if (keyValue != undefined) {
+					if(keyValue != undefined) {
 						value = value.substring(0, lastStart) + keyValue + value.substring(lastEnd + this.settings.keywordEmbedding.end.length);
 					}
 					index = lastStart + keyValue?.length ?? 0;
@@ -262,7 +262,7 @@ class LangFile {
 	 */
 
 	public registerTranslations(): void {
-		for (const key in this.entries) {
+		for(const key in this.entries) {
 			Translation.addTranslation(key, {
 				[this.settings.lang]: this.entries[key],
 			});
