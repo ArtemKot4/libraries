@@ -2,14 +2,15 @@ interface ILangSettings {
     /**
      * Language
      */
-    lang?: string,
+    lang?: typeof LangFile.langs[any],
     /**
      * Concats lines with \n, if you use multiline format of value
+     * @default true
      */
     concatMultiline?: boolean,
     /**
      * Enables more of performances. If it's false, it will parse faster, but considerings only inline comments.
-     @default false
+     * @default false
      */
     parseAdvanced?: boolean,
     /**
@@ -86,7 +87,13 @@ class LangFile {
 	/**
 	 * List of supports languages
 	 */
-	public static readonly langs: string[] = ["ru", "en", "uk", "kz"];
+	public static readonly langs = <const> ["ru", "en", "uk", "kz", "es", "pt", "zh"];
+
+    /**
+     * Path to file
+     */
+
+    public path?: string;
 
 	/**
 	 * String from file
@@ -104,48 +111,52 @@ class LangFile {
 	 * Entries in {[key: string]: string} format
 	 */
 
-	public entries: Record<string, string> = {};
+	public entries: Record<string, string>;
 
 	/**
 	 * Keywords in {[key: string]: string} format
 	 */
 
-	public keywords: Record<string, string> = {};
+	public keywords: Record<string, string>;
 
 	/**
 	 * @param path file path
      * @param settings parse settings
      */
 
-	public constructor(public path: string, settings: ILangSettings) {
+	public constructor(path: string, settings: ILangSettings) {
         settings = settings || {};
 
-		if(!LangFile.langs.includes(settings.lang)) {
-			throw new Error(`Wrong language "${settings.lang}" format`);
-		}
-		const file = FileTools.ReadText(path);
-		if(file == null) {
-			throw new Error(`File from path "${path}" is not found`);
-		}
+        if(!LangFile.langs.includes(settings.lang)) {
+            throw new Error(`Wrong language "${settings.lang}" format`);
+        }
+        const file = FileTools.ReadText(path);
+        if(file == null) {
+            throw new Error(`File from path "${path}" is not found`);
+        }
 
+        this.entries = {};
         settings.parseAdvanced = settings.parseAdvanced || true;
         settings.commentFormat = settings.commentFormat || {};
         settings.commentFormat.inline = settings.commentFormat.inline || "#";
-        settings.commentFormat.start = settings.commentFormat.start || "<-#";
-        settings.commentFormat.end = settings.commentFormat.end || "#->";
-        settings.keywordEmbedding = settings.keywordEmbedding || {
-            start: "${",
-            end: "}"
-        };
-        settings.concatMultiline = settings.concatMultiline || true;
-        settings.multilineChar = settings.multilineChar || "`";
-		this.file = file;
+        this.file = file;
 
-		if(settings.parseAdvanced == true) {
-			this.parseAdvanced();
-		} else {
-			this.parse();
-		}
+        if(settings.parseAdvanced == true) {
+            this.keywords = {};
+            settings.commentFormat.start = settings.commentFormat.start || "<-#";
+            settings.commentFormat.end = settings.commentFormat.end || "#->";
+            settings.keywordEmbedding = settings.keywordEmbedding || {
+                start: "${",
+                end: "}"
+            };
+            settings.concatMultiline = settings.concatMultiline || true;
+            settings.multilineChar = settings.multilineChar || "`";
+            this.settings = settings;
+            this.parseAdvanced();
+        } else {
+            this.settings = settings;
+            this.parse();
+        }
 	}
 
 	/**
@@ -155,7 +166,13 @@ class LangFile {
 	 */
 
 	protected getEntry(line: string, separator: string): string[] {
-		return line.split(separator).map((v) => v.split(this.settings.commentFormat.inline)[0].trim());
+		const entry = line.split(separator).map((v) => v.split(this.settings.commentFormat.inline)[0].trim());
+        
+        const index = entry.findIndex(v => !v);
+        if(index != -1) {
+            throw new Error(`Not valid format of ${ index == 0 ? "key" : "value" } at line "${line}"`);
+        }
+        return entry;
 	}
 
     /**
@@ -163,17 +180,16 @@ class LangFile {
      */
 
 	protected parse(): void {
-		const entries = {};
-		const splited = this.file.split("\n");
-		for (const i in splited) {
-			const line = splited[i].trim();
+		const lines = this.file.split("\n");
+		for(const i in lines) {
+			const line = lines[i].trim();
 			const [key, value] = this.getEntry(line, "=");
 
-			if (line.length == 0 || line.startsWith(this.settings.commentFormat.inline)) {
+			if(line.length == 0 || line.startsWith(this.settings.commentFormat.inline)) {
 				continue;
 			}
 
-			entries[key] = value;
+			this.entries[key] = value;
 		}
 	}
 
@@ -182,14 +198,12 @@ class LangFile {
 	 */
 
 	protected parseAdvanced(): void {
-		const entries = {};
-		const keywords = {};
-		const splited = this.file.split("\n");
+		const lines = this.file.split("\n");
 		let commentIndex = null;
 		let longString = null;
 
-		for(const i in splited) {
-			let line = splited[i];
+		for(const i in lines) {
+			let line = lines[i];
 			if(line.startsWith(this.settings.commentFormat.inline)) {
 				continue;
 			}
@@ -201,7 +215,7 @@ class LangFile {
 				}
 				const stringSymbol = line.indexOf(this.settings.multilineChar);
 				if(stringSymbol != -1) {
-					longString = line;
+					longString = line + (this.settings.concatMultiline ? "\n" : "");
 					continue;
 				}
 			}
@@ -209,12 +223,11 @@ class LangFile {
 			if(longString != null) {
 				const stringSymbol = line.indexOf(this.settings.multilineChar);
 				if(stringSymbol != -1) {
-					longString += line.slice(longString);
+					longString += line.substring(longString);
 					line = longString.replaceAll(this.settings.multilineChar, "");
 					longString = null;
 				} else {
-					longString += line + this.settings.concatMultiline ? "\n" : "";
-
+					longString += line + (this.settings.concatMultiline ? "\n" : "");
 					continue;
 				}
 			}
@@ -224,26 +237,26 @@ class LangFile {
 				if(commentEnd == -1) {
 					continue;
 				}
-				line = line.slice(commentEnd + this.settings.commentFormat.end.length);
+				line = line.substring(commentEnd + this.settings.commentFormat.end.length);
 				commentIndex = null;
 			}
 
 			if(!line.includes("=") && line.includes(":")) {
 				const [key, value] = this.getEntry(line, ":");
-				keywords[key] = value;
+				this.keywords[key] = value;
 				continue;
 			}
 
 			const commentStart = line.indexOf(this.settings.commentFormat.start);
 			if(commentIndex == null && commentStart != -1) {
-				line = line.slice(0, commentStart);
+				line = line.substring(0, commentStart);
 				commentIndex = i;
 			}
 
 			if(line.includes(":=")) {
 				const [key, value] = this.getEntry(line, ":=");
-				keywords[key] = value;
-				entries[key] = value;
+				this.keywords[key] = value;
+				this.entries[key] = value;
 				continue;
 			}
 
@@ -252,10 +265,6 @@ class LangFile {
 			}
 
 			let [key, value] = this.getEntry(line, "=");
-
-			if(!value) {
-				throw new Error(`Wrong value from key: "${key}"`);
-			}
 
 			if(value.includes(this.settings.keywordEmbedding.start)) {
 				let index = 0;
@@ -270,18 +279,16 @@ class LangFile {
 						throw new Error(`Wrong construction ${this.settings.keywordEmbedding.start} [keyword] ${this.settings.keywordEmbedding.end}`);
 					}
 
-					const keyName = value.slice(lastStart + (this.settings.keywordEmbedding.start.length), lastEnd);
-					const replacement = keywords[keyName];
-					if(replacement != undefined) {
-						value = value.slice(0, lastStart) + replacement + value.slice(lastEnd + 1);
+					const keyName = value.substring(lastStart + (this.settings.keywordEmbedding.start.length), lastEnd);
+					const keyValue = this.keywords[keyName];
+					if(keyValue != undefined) {
+						value = value.substring(0, lastStart) + keyValue + value.substring(lastEnd + this.settings.keywordEmbedding.end.length);
 					}
-					index = lastStart + replacement.length || 0;
+					index = lastStart + keyValue?.length ?? 0;
 				}
 			}
-			entries[key] = value;
+			this.entries[key] = value;
 		}
-		this.entries = entries;
-		this.keywords = keywords;
 	}
 
 	/**
@@ -308,10 +315,9 @@ class LangFile {
 		return file;
 	}
 }
-
 /*
 const file = "" +
-"aboba:= абоба" + "\n" +
-"hi = `привет " + "\n"  + " ${aboba} " + "и не только`//hehe" + "\n" +
-"as = 1" + "and heh";
+    "aboba:= абоба" + "\n" +
+    "hi = `привет " + "\n"  + " ${aboba} " + "и не только`//hehe" + "\n" +
+    "as = 1" + "and heh";
 */
