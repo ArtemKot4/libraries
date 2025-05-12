@@ -1,0 +1,67 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "lang",
+    "patterns": [
+        {
+            "include": "#multiline_comment"
+        },
+        {
+            "include": "#comment"
+        },
+        {
+            "include": "#keyword_embedding"
+        },
+        {
+            "include": "#strings"
+        },
+        {
+            "include": "#keys"
+        },
+        {
+            "include": "#numbers"
+        },
+        {
+            "include": "#general_strings"
+        }
+    ],
+    "repository": {
+        "strings": {
+            "name": "string.quoted.backtick.lang",
+            "begin": "`",
+            "end": "`",
+            "patterns": [
+                {
+                    "name": "constant.character.escape.lang",
+                    "match": "\\\\."
+                }
+            ]
+        },
+        "keys": {
+            "name": "variable",
+            "match": "^([A-Za-z_.][A-Za-z0-9_.]*)(?=\\s*[=:])"
+        },
+        "keyword_embedding": {
+            "name": "variable.other.interpolation.lang",
+            "match": "(?<=\\${)[^}]*(?=})"
+        },
+        "comment": {
+            "name": "comment.line",
+            "match": "#.*$"
+        },
+        "multiline_comment": {
+            "name": "comment.block",
+            "begin": "#->",
+            "end": "<-#"
+        },
+        "numbers": {
+            "name": "constant.numeric.lang",
+            "match": "-?[0-9]+(\\.[0-9]+)?"
+        },
+        "general_strings": {
+            "name": "string.general.lang",
+            "match": "[^[:space:]0-9=:=]+"
+        }
+    },
+    "scopeName": "source.lang",
+    "uuid": "134c94b9-34c9-4a39-a1c7-175de74bf6e0"
+}

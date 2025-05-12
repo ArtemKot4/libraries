@@ -55,7 +55,7 @@ class LangFile {
 	 * List of supports languages
 	 */
 
-	public static readonly langs = <const>["ru", "en", "uk", "kz", "es", "pt", "zh"];
+	public static readonly langs = <const> ["ru", "en", "uk", "kz", "es", "pt", "zh"];
 
 	/**
 	 * Path to file
