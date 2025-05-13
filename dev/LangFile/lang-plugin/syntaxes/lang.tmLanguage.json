@@ -6,16 +6,19 @@
             "include": "#multiline_comment"
         },
         {
+            "include": "#percent_highlight"
+        },
+        {
             "include": "#comment"
+        },  
+        {
+            "include": "#keys"
         },
         {
             "include": "#keyword_embedding"
         },
         {
-            "include": "#strings"
-        },
-        {
-            "include": "#keys"
+            "include": "#color_definition"
         },
         {
             "include": "#numbers"
@@ -25,24 +28,13 @@
         }
     ],
     "repository": {
-        "strings": {
-            "name": "string.quoted.backtick.lang",
-            "begin": "`",
-            "end": "`",
-            "patterns": [
-                {
-                    "name": "constant.character.escape.lang",
-                    "match": "\\\\."
-                }
-            ]
-        },
         "keys": {
             "name": "variable",
             "match": "^([A-Za-z_.][A-Za-z0-9_.]*)(?=\\s*[=:])"
         },
         "keyword_embedding": {
-            "name": "variable.other.interpolation.lang",
-            "match": "(?<=\\${)[^}]*(?=})"
+            "name": "variable",
+            "match": "\\${.*[A-Za-z_.][A-Za-z0-9_.]}"
         },
         "comment": {
             "name": "comment.line",
@@ -60,6 +52,14 @@
         "general_strings": {
             "name": "string.general.lang",
             "match": "[^[:space:]0-9=:=]+"
+        },
+        "color_definition": {
+            "name": "constant.numeric",
+            "match": "(§|&)([0-9abkmocdeflnr]).*$"
+        },
+        "percent_highlight": {
+            "name": "constant.numeric",
+            "match": "%[a-z]?"
         }
     },
     "scopeName": "source.lang",

@@ -1,8 +1,21 @@
 {
-    "autoClosingPairs": [
-        ["$", "{}"],
+    "surroundingPairs": [
+        ["${", "}"],
         ["\"", "\""],
         ["#->", "<-#"],
         ["`", "`"]
-    ]
+    ],
+    "autoClosingPairs": [
+        ["${", "}"],
+        ["\"", "\""],
+        ["#->", "<-#"],
+        ["`", "`"]
+    ],
+    "comments": {
+        "blockComment": [
+            "#->",
+            "<-#"
+        ],
+        "lineComment": "#"
+    }
 }
