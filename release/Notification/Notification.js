@@ -1,11 +1,13 @@
 /**
- * Библиотека открыта для всех желающих легко создавать анимации, подобные анимациям достижений из Java издания игры.
+ * Данная библиотека была разработана для упрощения создания экранных анимаций.
+ * Библиотека разработана с упором на производительность и высокую скорость работы, что позволяет вам создавать собственные анимации.
  *
- * Я признателен вам за использование библиотеки и надеюсь, что вы понимаете: код открыт для ознакомления, однако копирование любой части недопустимо.
+ * Я признателен вам за использование библиотеки и надеюсь, что вы понимаете:
+ * код открыт для ознакомления, однако копирование любой части вне контекста использования данной библиотеки недопустимо.
  *
  * Автор проекта: ArtemKot — github.com/ArtemKot4
  * Год основания: 2025
- * Вопросы можете задать в discord: discordapp.com/users/908847403073937419
+ * Вопросы можете задать мне в discord: discordapp.com/users/908847403073937419
  */
 var __values = (this && this.__values) || function(o) {
     var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
@@ -25,18 +27,15 @@ LIBRARY({
     api: "CoreEngine"
 });
 var screenName = null;
-Callback.addCallback("NativeGuiChanged", function (name, lastName, isPushEvent) {
-    screenName = name;
-});
-function separateText(text, line_size) {
+function separateText(text, lineSize) {
     var e_1, _a;
-    if (line_size === void 0) { line_size = 25; }
+    if (lineSize === void 0) { lineSize = 25; }
     var result = [];
     var line = "";
     try {
         for (var _b = __values(text.split(" ")), _c = _b.next(); !_c.done; _c = _b.next()) {
             var word = _c.value;
-            if (line.length + word.length <= line_size) {
+            if (line.length + word.length <= lineSize) {
                 line += word + " ";
             }
             else {
@@ -59,122 +58,48 @@ function separateText(text, line_size) {
 }
 /**
  * Class to create custom notification animations, be like as minecraft achievement animation.
- * @example
- * ```ts
-    class TransparentNotification extends Notification {
-        public mark: boolean = false;
-
-        protected onInit(style: INotificationStyle, runtimeStyle: INotificationRuntimeParams, description: INotificationWindowData): void {
-            this.mark = false;
-            this.UI.layout.setAlpha(0);
-        };
-
-        public setAlpha(value: number): void {
-            this.UI.layout.setAlpha(value);
-        };
-
-        protected run(style: INotificationStyle, runtimeStyle: INotificationRuntimeParams, data: INotificationWindowData): boolean {
-            const alpha = this.UI.layout.getAlpha();
-            if(alpha < 1 && !this.mark) {
-                this.setAlpha(alpha + 0.01);
-            } else {
-                if(!this.mark) {
-                    this.mark = true;
-                    java.lang.Thread.sleep(data.waitTime);
-                };
-            };
-            if(this.mark) {
-                this.setAlpha(alpha - 0.01);
-                if(alpha <= 0) {
-                    java.lang.Thread.sleep(style.queueTime);
-                    this.close();
-
-                    return true;
-                };
-            };
-        };
-    };
-
-    Notification.register("transparent", new TransparentNotification());
-
-    namespace ENotificationStyle {
-        export const TRANSPARENT: INotificationStyle = {
-            waitTime: 2000,
-            queueTime: 1000,
-            scale: 2.3,
-            width: 220,
-            height: 30,
-            frame: {
-                type: "custom",
-                x: 0,
-                y: 0,
-                width: 220 * 2.3,
-                height: 30 * 2.3,
-                custom: {
-                    onSetup(element) {
-                        const paint = this.paint = new android.graphics.Paint();
-                        paint.setStyle(android.graphics.Paint.Style.STROKE);
-                        paint.setARGB(100, 0, 0, 0);
-        
-                        element.setSize(220 * 2.3, 30 * 2.3);
-                    },
-                    onDraw(element, canvas, scale) {
-                        canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), this.paint);
-                    }
-                }
-            },
-            text: {
-                type: "text",
-                x: 48,
-                y: 15,
-                font: {
-                    color: android.graphics.Color.WHITE,
-                },
-                maxLineLength: 30
-            },
-            icon: {
-                type: "image",
-                x: 8,
-                y: 10,
-            }
-        };
-    };
-
-    Notification.get("transparent").addStyle("transparent", ENotificationStyle.TRANSPARENT);
-
-    Callback.addCallback("ItemUse", function(c, item, b, isE, player) {
-        const obj = {
-            text: {
-                type: "text",
-                text: Item.getName(item.id, item.data)
-            },
-            icon: {
-                type: "image",
-                item: item.id
-            }
-        } as INotificationRuntimeParams;
-
-        Notification.get("transparent").sendFor(player, "transparent", obj);
-    });
- * ```
  */
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var Notification = /** @class */ (function () {
     function Notification(type) {
+        /**
+         * List of styles
+         */
         this.styles = {};
+        /**
+         * Queue, from this field takes values to restart animation after previous.
+         */
         this.queue = [];
+        /**
+         * Lock value, influences on init.
+         */
         this.lock = false;
+        /**
+         * Stop value, influences on work of animation.
+         */
         this.stop = false;
+        /**
+         * User interface, using in animation.
+         */
         this.UI = (function () {
             var window = new UI.Window();
-            window.setAsGameOverlay(true);
             window.setDynamic(true);
-            window.setTouchable(false);
             return window;
         })();
-        if (type)
+        if (type != null) {
             this.type = type;
+        }
     }
-    ;
     /**
      * Method to add client packet, which can init animation for client from server request.
      */
@@ -184,24 +109,14 @@ var Notification = /** @class */ (function () {
             return _this.init(data.styleName, data.runtimeStyle);
         });
     };
-    ;
     /**
-     * Method to get specified Notification by type. {@link AchievementNotification} for example can be got with Notification.{@link get}("achievement")
-     * @param type type of the notification
-     */
-    Notification.get = function (type) {
-        if (!(type in this.list)) {
-            throw new java.lang.NoSuchFieldException("Notification: notification not found");
-        }
-        ;
-        return this.list[type];
-    };
-    /**
-     * Method to register new style for notification
+     * Method to register new style for notification.
      * @param name name of your style
      * @param style style description
      */
     Notification.prototype.addStyle = function (name, style) {
+        style.thread = style.thread || {};
+        style.elements = style.elements || {};
         this.styles[name] = style;
         return this;
     };
@@ -214,112 +129,109 @@ var Notification = /** @class */ (function () {
         return this;
     };
     /**
-     * Method clears queue
+     * Method clears queue.
      */
     Notification.prototype.clearQueue = function () {
         this.queue = [];
     };
     /**
-     * Changes lock state
+     * Changes lock state.
      * @param lock lock state
      */
     Notification.prototype.setLock = function (lock) {
         this.lock = lock;
         return this;
     };
+    /**
+     * Default value of UI color.
+     */
     Notification.prototype.getColor = function () {
         return android.graphics.Color.TRANSPARENT;
     };
+    /**
+     * Default value of x.
+     */
     Notification.prototype.getLocationX = function () {
         return 0;
     };
+    /**
+     * Default value of y.
+     */
     Notification.prototype.getLocationY = function () {
         return 0;
     };
+    /**
+     * Default value of width.
+     */
     Notification.prototype.getWidth = function () {
         return 200;
     };
+    /**
+     * Default value of height.
+     */
     Notification.prototype.getHeight = function () {
         return 100;
     };
+    /**
+     * Default value of scale.
+     * @default 1
+     */
     Notification.prototype.getScale = function () {
         return 1;
     };
+    /**
+     * Time which using to sleep thread every cycle. Influences on speed of animation.
+     */
     Notification.prototype.getSleepTime = function () {
         return 3;
     };
+    /**
+     * Time between restart animation with new data.
+     */
     Notification.prototype.getQueueTime = function () {
         return 1000;
     };
-    Notification.prototype.getWaitTime = function () {
+    /**
+     * Time to sleep in reach state.
+     */
+    Notification.prototype.getReachTime = function () {
         return 2000;
     };
-    Notification.prototype.getDescription = function (style, runtimeStyle) {
-        var scale = runtimeStyle.scale || style.scale || this.getScale();
-        var width = (runtimeStyle.width || style.width || this.getWidth()) * scale;
-        var height = (runtimeStyle.height || style.height || this.getHeight()) * scale;
-        var content = {
-            location: {
-                x: runtimeStyle.x || style.x || this.getLocationX(),
-                y: runtimeStyle.y || style.y || this.getLocationY(),
-                width: width,
-                height: height
-            },
-            drawing: [{
-                    type: "background",
-                    color: runtimeStyle.color || style.color || this.getColor(),
-                }],
-            elements: {}
-        };
-        for (var element_name in style) {
-            var description = style[element_name];
-            if (typeof description !== "number") {
-                var runtime = runtimeStyle[element_name] || {};
-                var defaultX = (runtime.x || description.x) * scale;
-                var defaultY = (runtime.y || description.y) * scale;
-                var element = Object.assign({}, description, runtime, {
-                    x: defaultX,
-                    y: defaultY
-                });
-                if (description.text || runtime.text) {
-                    var maxLineLength = (runtime.maxLineLength || description.maxLineLength) || 20;
-                    var text = separateText(Translation.translate(runtime.text || description.text), maxLineLength);
-                    element.text = text;
-                    if (text.length > maxLineLength) {
-                        element.multiline = true;
-                    }
-                }
-                if (description.item || runtime.item) {
-                    var item = runtime.item || description.item;
-                    element.type = "slot";
-                    element.bitmap = "unknown";
-                    element.source = {
-                        id: typeof item == "string" ? (ItemID[item] || VanillaItemID[item] || BlockID[item] || VanillaBlockID[item]) : item,
-                        count: 1,
-                        data: 0
-                    };
-                    element.iconScale = 1;
-                }
-                if ("onInit" in element) {
-                    element.onInit(element, style, runtimeStyle);
-                }
-                content.elements[element_name] = element;
-            }
-        }
-        return ({
-            content: content,
-            queueTime: runtimeStyle.queueTime || style.queueTime || this.getQueueTime(),
-            sleepTime: runtimeStyle.sleepTime || style.sleepTime || this.getSleepTime(),
-            waitTime: runtimeStyle.waitTime || style.waitTime || this.getWaitTime()
-        });
+    /**
+     * @returns ui is touchable or not (if not, button clicks will not work).
+     */
+    Notification.prototype.isTouchable = function () {
+        return true;
     };
+    /**
+     * @returns ui is game overlay or not.
+     */
+    Notification.prototype.isGameOverlay = function () {
+        return true;
+    };
+    /**
+     * Condition to prevent init animation.
+     * @param styleName name of style
+     * @param runtimeStyle notification runtime params from init
+     * @returns
+     */
     Notification.prototype.preventInit = function (styleName, runtimeStyle) {
-        return this.lock == true || screenName !== "in_game_play_screen";
+        return this.lock == true || screenName != "in_game_play_screen";
     };
-    ;
+    /**
+     * Method, works when animation was prevented.
+     * @param styleName name of style
+     * @param runtimeStyle notification runtime params from init
+     */
     Notification.prototype.onPreventInit = function (styleName, runtimeStyle) {
         this.queue.push({ styleName: styleName, runtimeStyle: runtimeStyle });
     };
+    /**
+     * Method to get style.
+     * Throws `java.lang.NoSuchFieldException` if style is not exists.
+     * @param styleName name of style
+     * @returns Notification style
+     */
     Notification.prototype.getStyle = function (styleName) {
         if (!(styleName in this.styles)) {
             throw new java.lang.NoSuchFieldException("Notification error: style ".concat(styleName, " is not exists"));
@@ -327,8 +239,22 @@ var Notification = /** @class */ (function () {
         return this.styles[styleName];
     };
     /**
+     * Method to set content of window
+     */
+    Notification.prototype.setContent = function () {
+        this.UI.setContent({
+            location: Notification.getStyledLocation(this.currentStyle),
+            drawing: [{
+                    type: "background",
+                    color: this.currentStyle.window.color
+                }],
+            elements: Notification.getStyledElementSet(this.currentStyle)
+        });
+        this.UI.forceRefresh();
+    };
+    /**
      * Method to open notification with specified style name and runtime data.
-     * @param styleName name of your style in {@link Notification.styles}
+     * @param styleName name of your style in {@link styles}
      * @param runtimeStyle your runtime data. It can be text or image
      */
     Notification.prototype.init = function (styleName, runtimeStyle) {
@@ -336,27 +262,39 @@ var Notification = /** @class */ (function () {
         if (this.preventInit(styleName, runtimeStyle)) {
             return this.onPreventInit(styleName, runtimeStyle);
         }
+        runtimeStyle.thread = runtimeStyle.thread || {};
+        runtimeStyle.window = runtimeStyle.window || {};
+        this.currentStyleName = styleName;
         var style = this.getStyle(styleName);
-        var description = this.getDescription(style, runtimeStyle);
+        this.currentStyle = {
+            thread: {},
+            window: {},
+            elements: {}
+        };
+        this.preInit(style, runtimeStyle);
+        for (var elementName in style.elements) {
+            this.currentStyle.elements[elementName] = Object.assign({}, style.elements[elementName], runtimeStyle.elements[elementName]);
+        }
+        this.UI.setAsGameOverlay(this.currentStyle.window.overlay);
+        this.UI.setTouchable(this.currentStyle.window.touchable);
+        this.UI.updateWindowLocation();
         if (!this.UI.isOpened()) {
             this.UI.open();
         }
         this.setLock(true);
-        this.UI.setContent(description.content);
-        this.UI.updateWindowLocation();
-        this.UI.forceRefresh();
-        this.onInit(style, runtimeStyle, description);
-        this.thread = Threading.initThread("thread.ui.".concat(this.type, "_notification"), function () { return _this.run(style, runtimeStyle, description); });
+        this.setContent();
+        this.postInit();
+        this.thread = Threading.initThread("thread.ui.notification.".concat(this.type), function () { return _this.run(); });
         return;
     };
     /**
      * Method to init thread, contains logic of change notifications.
      */
-    Notification.prototype.run = function (style, runtimeStyle, description) {
-        while (this.stop === false) {
-            java.lang.Thread.sleep(description.sleepTime);
-            var done = this.work(style, runtimeStyle, description);
-            if (done === true) {
+    Notification.prototype.run = function () {
+        while (this.stop == false) {
+            java.lang.Thread.sleep(this.currentStyle.thread.sleepTime);
+            var done = this.work();
+            if (done == true) {
                 this.setLock(false);
                 this.initLast();
                 break;
@@ -364,11 +302,11 @@ var Notification = /** @class */ (function () {
         }
     };
     /**
-     * Method {@link init}s  and deletes last notification from queue
+     * Method {@link init inits} and deletes last notification from queue
      * @returns true if notification was inited
      */
     Notification.prototype.initLast = function () {
-        if (this.queue.length > 0 && screenName === "in_game_play_screen") {
+        if (this.queue.length > 0 && screenName == "in_game_play_screen") {
             var data = this.queue.shift();
             this.init(data.styleName, data.runtimeStyle);
             return true;
@@ -376,45 +314,195 @@ var Notification = /** @class */ (function () {
         return false;
     };
     /**
-     * Method, calls after opening ui. It can be used to set default values.
-     * @param style Notification style from init.
-     * @param description Description of window.
+     * Method, works before opening ui.
+     * @param styleName name of style
+     * @param runtimeStyle notification runtime params from init
      */
-    Notification.prototype.onInit = function (style, runtimeStyle, description) { };
+    Notification.prototype.preInit = function (style, runtimeStyle) {
+        this.currentStyle.thread.sleepTime = (runtimeStyle.thread.sleepTime || style.thread.sleepTime) || this.getSleepTime();
+        this.currentStyle.thread.reachTime = (runtimeStyle.thread.reachTime || style.thread.reachTime) || this.getReachTime();
+        this.currentStyle.thread.queueTime = (runtimeStyle.thread.queueTime || style.thread.queueTime) || this.getQueueTime();
+        this.currentStyle.window.color = (runtimeStyle.window.color || style.window.color) || this.getColor();
+        this.currentStyle.window.height = (runtimeStyle.window.height || style.window.height) || this.getHeight();
+        this.currentStyle.window.width = (runtimeStyle.window.width || style.window.width) || this.getWidth();
+        this.currentStyle.window.scale = (runtimeStyle.window.scale || style.window.scale) || this.getScale();
+        this.currentStyle.window.x = (runtimeStyle.window.x || style.window.x) || this.getLocationX();
+        this.currentStyle.window.y = (runtimeStyle.window.y || style.window.y) || this.getLocationY();
+        this.currentStyle.window.overlay = (runtimeStyle.window.overlay || style.window.overlay) || this.isGameOverlay();
+        this.currentStyle.window.touchable = (runtimeStyle.window.touchable || style.window.touchable) || this.isTouchable();
+    };
     /**
-     * Method to send player from server notification with specified style name and runtime data.
-     * @param styleName name of your style in {@link Notification.styles}
-     * @param runtimeStyle your runtime data.
+     * Method, calls after opening ui. It can be used to set default values.
      */
-    Notification.prototype.sendFor = function (player_uid, styleName, runtimeStyle) {
-        var client = Network.getClientForPlayer(player_uid);
+    Notification.prototype.postInit = function () { };
+    ;
+    /**
+     * Method to send client from server notification with specified style name and runtime data.
+     * @param styleName name of your style in {@link Notification.styles}
+     * @param runtimeStyle your runtime data
+     */
+    Notification.prototype.sendFor = function (playerUid, styleName, runtimeStyle) {
+        var client = Network.getClientForPlayer(playerUid);
         if (client) {
             client.send("packet.notification.send_".concat(this.type, "_notification"), { styleName: styleName, runtimeStyle: runtimeStyle });
         }
     };
     /**
      * Method, calls with using close function.
-     * @param style Notification style from init.
-     * @param runtimeStyle your runtime data.
-     * @param description result of {@link getDescription description}
      */
-    Notification.prototype.onClose = function (style, runtimeStyle, description) { };
-    Notification.prototype.close = function (style, runtimeStyle, description) {
-        this.onClose(style, runtimeStyle, description);
+    Notification.prototype.onClose = function () { };
+    ;
+    /**
+     * Method to close ui.
+     */
+    Notification.prototype.close = function () {
+        this.onClose();
         this.UI.close();
     };
+    /**
+     * Method works when elements reaches need position.
+     */
+    Notification.prototype.onReach = function () { };
+    ;
+    /**
+     * Method to get styled location
+     * @param style style
+     * @param x addition x value concating with main, optional
+     * @param y addition y value concating with main, optional
+     */
+    Notification.getStyledLocation = function (style, x, y) {
+        return {
+            x: (x || 0) + style.window.x,
+            y: (y || 0) + style.window.y,
+            width: style.window.width * style.window.scale,
+            height: style.window.height * style.window.scale
+        };
+    };
+    /**
+     * Method to get element set from your style
+     * @param x addition x value concats to main, optional
+     * @param y addition y value concats to main, optional
+     * @param keyword word, adds to default key name, optional. If defined, after keyword `"_"` will be aded
+     * @returns default `UI.ElementSet`
+     */
+    Notification.getStyledElementSet = function (style, x, y, keyword) {
+        var elements = {};
+        for (var elementName in style.elements) {
+            var description = style.elements[elementName];
+            var element = __assign(__assign({}, description), { x: (x || 0) + description.x, y: (y || 0) + description.y });
+            if ("preInit" in element) {
+                element.preInit(element, style);
+            }
+            if ("text" in description) {
+                var maxLineLength = description.lineSize || 25;
+                var text = separateText(Translation.translate(description.text), maxLineLength);
+                element.text = text;
+                if (text.length > maxLineLength) {
+                    element.multiline = true;
+                }
+            }
+            if ("item" in description) {
+                element.type = "slot";
+                element.bitmap = "INotificationParams";
+                element.source = {
+                    id: typeof description.item == "string" ?
+                        (ItemID[description.item] ||
+                            VanillaItemID[description.item] ||
+                            BlockID[description.item] ||
+                            VanillaBlockID[description.item]) : description.item,
+                    count: 1,
+                    data: 0
+                };
+                element.iconScale = description.scale || 1;
+            }
+            if ("postInit" in element) {
+                element.postInit(element, style);
+            }
+            elements[(keyword != null ? keyword + "_" : "") + elementName] = element;
+        }
+        return elements;
+    };
+    /**
+     * Method to learn, exists type of notification or not.
+     */
+    Notification.has = function (type) {
+        return type in this.list;
+    };
+    /**
+     * Method to get specified Notification by type. {@link AchievementNotification} for example can be got with Notification.{@link get}("achievement").
+     * Throws `java.lang.NoSuchFieldException` if notification is not exists.
+     * @param type type of the notification
+     */
+    Notification.get = function (type) {
+        if (!Notification.has(type)) {
+            throw new java.lang.NoSuchFieldException("Notification: type \"".concat(type, "\" of notification is not exists"));
+        }
+        return this.list[type];
+    };
+    /**
+     * Method to register new notification with special type.
+     * Throws `java.lang.SecurityException` if notification exists.
+     * @param type keyword to register notification
+     * @param notification object of notification
+     */
     Notification.register = function (type, notification) {
-        if (type in Notification.list) {
+        if (Notification.has(type)) {
             throw new java.lang.SecurityException("Notification: notification is already registered");
         }
-        ;
         if (!notification.type) {
             notification.type = type;
             notification.buildPacket();
         }
-        ;
         return Notification.list[type] = notification;
     };
+    /**
+     * Method to learn is active type or not now.
+     */
+    Notification.isActive = function (type) {
+        return Notification.get(type).lock;
+    };
+    /**
+     * Method to get active types.
+     * @returns actived types of notifications
+     */
+    Notification.getActiveTypes = function () {
+        var types = [];
+        for (var i in Notification.list) {
+            if (Notification.list[i].lock == true) {
+                types.push(Notification.list[i]);
+            }
+        }
+        return types;
+    };
+    /**
+     * Method to init notification with special type.
+     * @param type type of notification
+     * @param styleName name of style
+     * @param runtimeStyle notification runtime params from init
+     */
+    Notification.init = function (type, styleName, runtimeStyle) {
+        return Notification.get(type).init(styleName, runtimeStyle);
+    };
+    /**
+     * Method to send client from server notification with specified style name and runtime data.
+     * Throws `java.lang.NoSuchFieldException` if notification is not exists.
+     * @param playerUid unique player identifier
+     * @param type type of notification
+     * @param styleName name of style
+     * @param runtimeStyle notification runtime params from init
+     */
+    Notification.sendFor = function (playerUid, type, styleName, runtimeStyle) {
+        if (!Notification.has(type)) {
+            throw new java.lang.NoSuchFieldException("Notification: type \"".concat(type, "\" of notification is not exists"));
+        }
+        var client = Network.getClientForPlayer(playerUid);
+        if (client) {
+            return client.send("packet.notification.send_".concat(type, "_notification"), { styleName: styleName, runtimeStyle: runtimeStyle });
+        }
+    };
+    /**
+     * List of all notifications with special unique type.
+     */
     Notification.list = {};
     return Notification;
 }());
@@ -427,7 +515,8 @@ Callback.addCallback("LocalLevelLeft", function () {
     }
 });
 Callback.addCallback("NativeGuiChanged", function (name, lastName, isPushEvent) {
-    if (name === "in_game_play_screen") {
+    screenName = name;
+    if (name == "in_game_play_screen") {
         for (var i in Notification.list) {
             var notification = Notification.list[i];
             notification.initLast();
@@ -437,62 +526,33 @@ Callback.addCallback("NativeGuiChanged", function (name, lastName, isPushEvent) 
 var NotificationStyles;
 (function (NotificationStyles) {
     NotificationStyles.TRANSPARENT = {
-        waitTime: 2000,
-        queueTime: 1000,
-        scale: 2.3,
-        width: 180,
-        height: 20,
-        frame: {
-            type: "custom",
-            x: 0,
-            y: 0,
-            width: 220 * 2.3,
-            height: 30 * 2.3,
-            custom: {
-                onSetup: function (element) {
-                    this.paint = new android.graphics.Paint();
-                    this.paint.setARGB(100, 0, 0, 0);
-                    element.setSize(180 * 2.3, 20 * 2.3);
+        thread: {
+            reachTime: 2000,
+            queueTime: 1000
+        },
+        window: {
+            scale: 2.3,
+            width: 180,
+            height: 20
+        },
+        elements: {
+            text: {
+                type: "text",
+                x: 48,
+                y: 15,
+                font: {
+                    color: android.graphics.Color.WHITE
                 },
-                onDraw: function (element, canvas, scale) {
-                    canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), this.paint);
-                }
-            }
-        },
-        text: {
-            type: "text",
-            x: 48,
-            y: 15,
-            font: {
-                color: android.graphics.Color.WHITE,
+                lineSize: 30
             },
-            maxLineLength: 30
-        },
-        icon: {
-            type: "image",
-            x: 8,
-            y: 10
+            icon: {
+                type: "image",
+                x: 8,
+                y: 10
+            }
         }
     };
 })(NotificationStyles || (NotificationStyles = {}));
-;
-// Callback.addCallback("ItemUse", function(c, item, b, isE, player) {
-//     const obj = {
-//         text: {
-//             type: "text",
-//             text: Item.getName(item.id, item.data)
-//         },
-//         icon: {
-//             type: "image",
-//             item: item.id
-//         }
-//     } as INotificationRuntimeParams;
-//     if(Entity.getSneaking(player)) {
-//         Notification.get("achievement").sendFor(player, "transparent", obj);
-//     } else {
-//         Notification.get("transparent").sendFor(player, "transparent", obj);
-//     };
-// }); //debug
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -518,11 +578,11 @@ var TransparentNotification = /** @class */ (function (_super) {
     TransparentNotification.prototype.setAlpha = function (value) {
         this.UI.layout.setAlpha(value);
     };
-    TransparentNotification.prototype.onInit = function (style, runtimeStyle, description) {
+    TransparentNotification.prototype.postInit = function () {
         this.mark = false;
         this.UI.layout.setAlpha(0);
     };
-    TransparentNotification.prototype.work = function (style, runtimeStyle, data) {
+    TransparentNotification.prototype.work = function () {
         var alpha = this.UI.layout.getAlpha();
         if (alpha < 1 && !this.mark) {
             this.setAlpha(alpha + 0.01);
@@ -530,13 +590,14 @@ var TransparentNotification = /** @class */ (function (_super) {
         else {
             if (!this.mark) {
                 this.mark = true;
-                java.lang.Thread.sleep(data.waitTime);
+                java.lang.Thread.sleep(this.currentStyle.thread.reachTime);
+                this.onReach();
             }
         }
         if (this.mark) {
             this.setAlpha(alpha - 0.01);
             if (alpha <= 0) {
-                java.lang.Thread.sleep(style.queueTime);
+                java.lang.Thread.sleep(this.currentStyle.thread.queueTime);
                 this.close();
                 return true;
             }
@@ -555,41 +616,43 @@ var AchievementNotification = /** @class */ (function (_super) {
         _this.height = 0;
         return _this;
     }
-    AchievementNotification.prototype.updateElementsHeight = function (value) {
+    AchievementNotification.prototype.updateElementsHeight = function (height) {
         var elements = this.UI.getElements();
-        for (var name in this.defaults) {
-            elements.get(name).setPosition(this.defaults[name].x, value + this.defaults[name].y);
+        for (var name in this.defaultHeights) {
+            elements.get(name).setPosition(this.UI.content.elements[name].x, height + this.defaultHeights[name]);
         }
     };
-    AchievementNotification.prototype.onInit = function (style, runtimeStyle, description) {
-        this.maxHeight = style.height * style.scale;
+    AchievementNotification.prototype.setDefaultHeights = function () {
+        this.defaultHeights = {};
+        for (var i in this.UI.content.elements) {
+            var element = this.UI.content.elements[i];
+            this.defaultHeights[i] = element.y || 0;
+        }
+    };
+    AchievementNotification.prototype.postInit = function () {
+        this.maxHeight = this.currentStyle.window.height * this.currentStyle.window.scale;
         this.height = -this.maxHeight;
         this.mark = false;
-        this.defaults = {};
-        for (var i in description.content.elements) {
-            var element = description.content.elements[i];
-            this.defaults[i] = {
-                x: element.x || 0,
-                y: element.y || 0
-            };
-        }
+        this.setDefaultHeights();
+        this.updateElementsHeight(this.height);
     };
-    AchievementNotification.prototype.work = function (style, runtimeStyle, data) {
+    AchievementNotification.prototype.work = function () {
         if (!this.mark) {
             if (this.height < 0) {
-                this.updateElementsHeight(this.height += 1);
+                this.updateElementsHeight(this.height++);
             }
             else {
-                java.lang.Thread.sleep(data.waitTime);
                 this.mark = true;
+                java.lang.Thread.sleep(this.currentStyle.thread.reachTime);
+                this.onReach();
             }
         }
         else {
             if (this.height > -this.maxHeight) {
-                this.updateElementsHeight(this.height -= 1);
+                this.updateElementsHeight(this.height--);
             }
             else {
-                java.lang.Thread.sleep(style.queueTime);
+                java.lang.Thread.sleep(this.currentStyle.thread.queueTime);
                 this.close();
                 return true;
             }
@@ -599,6 +662,177 @@ var AchievementNotification = /** @class */ (function (_super) {
 }(Notification));
 Notification.register("achievement", new AchievementNotification())
     .addStyle("transparent", NotificationStyles.TRANSPARENT);
+var AdvancementNotification = /** @class */ (function (_super) {
+    __extends(AdvancementNotification, _super);
+    function AdvancementNotification() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.maxOffset = 100;
+        _this.mark = false;
+        _this.offset = 0;
+        return _this;
+    }
+    AdvancementNotification.prototype.setDefaultOffsets = function () {
+        this.defaultOffsets = {};
+        for (var i in this.UI.content.elements) {
+            var element = this.UI.content.elements[i];
+            this.defaultOffsets[i] = element.x || 0;
+        }
+    };
+    AdvancementNotification.prototype.updateElementsOffset = function (offset) {
+        var elements = this.UI.getElements();
+        for (var name in this.defaultOffsets) {
+            elements.get(name).setPosition(offset + this.defaultOffsets[name], this.UI.content.elements[name].y);
+        }
+    };
+    AdvancementNotification.prototype.getSleepTime = function () {
+        return 2;
+    };
+    AdvancementNotification.prototype.setContent = function () {
+        this.UI.setContent({
+            location: Notification.getStyledLocation(this.currentStyle, this.currentStyle.window.position == "left" ? 0 : 1000 - this.currentStyle.window.width * this.currentStyle.window.scale),
+            drawing: [{
+                    type: "background",
+                    color: this.currentStyle.window.color
+                }],
+            elements: Notification.getStyledElementSet(this.currentStyle)
+        });
+        this.UI.forceRefresh();
+    };
+    AdvancementNotification.prototype.preInit = function (style, runtimeStyle) {
+        _super.prototype.preInit.call(this, style, runtimeStyle);
+        this.currentStyle.window.position = (runtimeStyle.window.position || style.window.position) || "right";
+        this.currentStyle.window.maxCount = (runtimeStyle.window.maxCount || style.window.maxCount) || 4;
+    };
+    AdvancementNotification.prototype.postInit = function () {
+        this.mark = false;
+        this.maxOffset = this.currentStyle.window.width * this.currentStyle.window.scale;
+        this.offset = this.currentStyle.window.position == "left" ? -this.maxOffset : this.maxOffset * 2;
+        this.updateElementsOffset(this.offset);
+        this.setDefaultOffsets();
+        this.work = this.currentStyle.window.position == "left" ? this.moveLeft : this.moveRight;
+    };
+    AdvancementNotification.prototype.moveLeft = function () {
+        if (!this.mark) {
+            if (this.offset < 0) {
+                this.updateElementsOffset(this.offset += 2);
+            }
+            else {
+                this.mark = true;
+                java.lang.Thread.sleep(this.currentStyle.thread.reachTime);
+                this.onReach();
+            }
+        }
+        else {
+            if (this.offset > -this.maxOffset) {
+                this.updateElementsOffset(this.offset -= 2);
+            }
+            else {
+                java.lang.Thread.sleep(this.currentStyle.thread.queueTime);
+                this.close();
+                return true;
+            }
+        }
+    };
+    AdvancementNotification.prototype.moveRight = function () {
+        if (!this.mark) {
+            if (this.offset > this.maxOffset) {
+                this.updateElementsOffset(this.offset -= 2);
+            }
+            else {
+                this.mark = true;
+                java.lang.Thread.sleep(this.currentStyle.thread.reachTime);
+                this.onReach();
+            }
+        }
+        else {
+            if (this.offset < this.maxOffset * 2) {
+                this.updateElementsOffset(this.offset += 2);
+            }
+            else {
+                java.lang.Thread.sleep(this.currentStyle.thread.queueTime);
+                this.close();
+                return true;
+            }
+        }
+    };
+    AdvancementNotification.prototype.work = function () {
+        return false;
+    };
+    return AdvancementNotification;
+}(Notification));
+Notification.register("advancement", new AdvancementNotification());
+// .addStyle("transparent", {
+//     thread: {  
+//         reachTime: 2000,
+//         queueTime: 1000
+//     },
+//     window: {
+//         width: 240 * 2,
+//         height: 40 * 2
+//     },
+//     elements: {
+//         background: {
+//             type: "image",
+//             x: 0,
+//             y: 0,
+//             width: 240 * 2,
+//             height: 40 * 2,
+//             bitmap: "notification"
+//         },
+//         text: {
+//             type: "text",
+//             x: 50,
+//             y: 9,
+//             lineSize: 30,
+//             font: {
+//                 color: android.graphics.Color.WHITE,
+//                 size: 25
+//             }
+//         },
+//         icon: {
+//             type: "image",
+//             x: 100,
+//             y: 5,
+//             scale: 1.8,
+//             size: 90,
+//             width: 27,
+//             height: 27
+//         }
+//     }
+// });
+// Callback.addCallback("ItemUse", (c, i, b, isE, p) => {
+//     if(i.id == VanillaItemID.diamond) {
+//         Notification.get("achievement").init("transparent", {
+//             elements: {
+//                 text: {
+//                     type: "text",
+//                     text: "2222"
+//                 },
+//                 icon: {
+//                     type: "image",
+//                     item: 263
+//                 }
+//             }
+//         })
+//     } else if (i.id == VanillaItemID.emerald) {
+//         Notification.get<AdvancementNotification>("advancement").init("transparent", {
+//             window: {
+//                 position: Entity.getSneaking(p) == true ? "left" : "right"
+//             },
+//             elements: {
+//                 text: {
+//                     type: "text",
+//                     text: String(Math.floor(Math.random()*20)-1)
+//                 },
+//                 icon: {
+//                     type: "image",
+//                     item: 263
+//                 }
+//             }
+//         })
+//     }
+// });
 EXPORT("Notification", Notification);
 EXPORT("TransparentNotification", TransparentNotification);
 EXPORT("AchievementNotification", AchievementNotification);
+EXPORT("AdvancementNotification", AdvancementNotification);

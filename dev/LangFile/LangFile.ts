@@ -190,7 +190,7 @@ class LangFile {
 				const stringSymbol = line.indexOf(this.settings.multilineChar);
 				if(stringSymbol != -1) {
 					longString += line.substring(longString);
-					line = longString.replaceAll(this.settings.multilineChar, "");
+					line = longString.replace(new RegExp(this.settings.multilineChar, "g"), "");
 					longString = null;
 				} else {
 					longString += line + (this.settings.concatMultiline ? "\n" : "");

@@ -29,45 +29,13 @@ var __read = (this && this.__read) || function (o, n) {
     }
     return ar;
 };
-/**
- * Class to read, manipulate and register translations from .lang files in defined format from library.
- * @example
-   ```lang
-   //lang file start
-   rocketTier: 1 tier //register keyword
-   mod.rocket = I am rocket from mod and my tier is ${rocketTier} //register translation, keyword inside line
- 
-   mod.version := 1.0.0 //register translation and keyword
-   mod.info = I am mod, adds ${rocketTier} rocket and my version is ${version}
-   //lang file end
-   ```
-   ```javascript
-   //in mod
-   const langFile = new LangFile("path/to/file.lang", {
-        lang: "en",
-        parseAdvanced: true
-   });
-   Game.message(JSON.stringify(langFile.keywords));
-   //{
-   //"rocketTier": "1 tier",
-   //"version": "1.0.0"
-   //}
-   Game.message(JSON.stringify(langFile.entries));
-   //{
-   //"mod.rocket": "I am rocket from mod and my tier is 1 tier",
-   //"mod.version": "I am mod, adds 1 tier rocket and my version is 1.0.0"
-   //}
-   langFile.registerTranslations();
-   alert(Translation.translate("mod.rocket")) // I am rocket from mod and my tier is 1 tier
-   ```
- */
 var LangFile = /** @class */ (function () {
     /**
      * @param path file path
      * @param settings parse settings
      */
     function LangFile(path, settings) {
-        settings = settings || {};
+        if (settings === void 0) { settings = {}; }
         if (!LangFile.langs.includes(settings.lang)) {
             throw new Error("Wrong language \"".concat(settings.lang, "\" format"));
         }
@@ -86,7 +54,7 @@ var LangFile = /** @class */ (function () {
             settings.commentFormat.end = settings.commentFormat.end || "#->";
             settings.keywordEmbedding = settings.keywordEmbedding || {
                 start: "${",
-                end: "}"
+                end: "}",
             };
             settings.concatMultiline = settings.concatMultiline || true;
             settings.multilineChar = settings.multilineChar || "`";
@@ -154,7 +122,7 @@ var LangFile = /** @class */ (function () {
                 var stringSymbol = line.indexOf(this.settings.multilineChar);
                 if (stringSymbol != -1) {
                     longString += line.substring(longString);
-                    line = longString.replaceAll(this.settings.multilineChar, "");
+                    line = longString.replace(new RegExp(this.settings.multilineChar, "g"), "");
                     longString = null;
                 }
                 else {
@@ -201,7 +169,7 @@ var LangFile = /** @class */ (function () {
                     if (lastEnd == -1) {
                         throw new Error("Wrong construction ".concat(this.settings.keywordEmbedding.start, " [keyword] ").concat(this.settings.keywordEmbedding.end));
                     }
-                    var keyName = value.substring(lastStart + (this.settings.keywordEmbedding.start.length), lastEnd);
+                    var keyName = value.substring(lastStart + this.settings.keywordEmbedding.start.length, lastEnd);
                     var keyValue = this.keywords[keyName];
                     if (keyValue != undefined) {
                         value = value.substring(0, lastStart) + keyValue + value.substring(lastEnd + this.settings.keywordEmbedding.end.length);
@@ -239,10 +207,4 @@ var LangFile = /** @class */ (function () {
     LangFile.langs = ["ru", "en", "uk", "kz", "es", "pt", "zh"];
     return LangFile;
 }());
-/*
-const file = "" +
-    "aboba:= абоба" + "\n" +
-    "hi = `привет " + "\n"  + " ${aboba} " + "и не только`//hehe" + "\n" +
-    "as = 1" + "and heh";
-*/ 
 EXPORT("LangFile", LangFile);

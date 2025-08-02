@@ -1,14 +1,19 @@
-interface INotificationTimerParams {
+interface INotificationTimerParams<thread> {
     /**
-     * time before moving back, in milliseconds
+     * Values, usings in thread.
      */
-    waitTime?: number,
-    /**
-     * time before next notification, in milliseconds
-     */
-    queueTime?: number,
-    /**
-     * time how much thread is sleep between elements moving, in milliseconds. 
-     */ 
-    sleepTime?: number
+    thread: {
+        /**
+         * time before moving back, in milliseconds.
+         */
+        reachTime?: number,
+        /**
+         * time between next notification, in milliseconds.
+         */
+        queueTime?: number,
+        /**
+         * time how much thread is sleep between elements moving, in milliseconds. 
+         */ 
+        sleepTime?: number
+    } & thread;
 }

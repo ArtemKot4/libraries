@@ -5,25 +5,27 @@ class TransparentNotification extends Notification {
         this.UI.layout.setAlpha(value);
     }
 
-    protected override onInit(style: INotificationStyle, runtimeStyle: INotificationRuntimeParams, description: INotificationWindowData): void {
+    protected override postInit(): void {
         this.mark = false;
         this.UI.layout.setAlpha(0);
     }
 
-    protected override work(style: INotificationStyle, runtimeStyle: INotificationRuntimeParams, data: INotificationWindowData): boolean {
+    protected override work(): boolean {
         const alpha = this.UI.layout.getAlpha();
         if(alpha < 1 && !this.mark) {
             this.setAlpha(alpha + 0.01);
         } else {
             if(!this.mark) {
                 this.mark = true;
-                java.lang.Thread.sleep(data.waitTime);
+            
+                java.lang.Thread.sleep(this.currentStyle.thread.reachTime);
+                this.onReach();
             }
         }
         if(this.mark) {
             this.setAlpha(alpha - 0.01);
             if(alpha <= 0) {
-                java.lang.Thread.sleep(style.queueTime);
+                java.lang.Thread.sleep(this.currentStyle.thread.queueTime);
                 this.close();
 
                 return true;

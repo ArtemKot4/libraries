@@ -1,125 +1,77 @@
 /**
  * Class to create custom notification animations, be like as minecraft achievement animation.
- * @example
- * ```ts
-    class TransparentNotification extends Notification {
-        public mark: boolean = false;
-
-        protected onInit(style: INotificationStyle, runtimeStyle: INotificationRuntimeParams, description: INotificationWindowData): void {
-            this.mark = false;
-            this.UI.layout.setAlpha(0);
-        }
-
-        public setAlpha(value: number): void {
-            this.UI.layout.setAlpha(value);
-        }
-
-        protected work(style: INotificationStyle, runtimeStyle: INotificationRuntimeParams, data: INotificationWindowData): boolean {
-            const alpha = this.UI.layout.getAlpha();
-            if(alpha < 1 && !this.mark) {
-                this.setAlpha(alpha + 0.01);
-            } else {
-                if(!this.mark) {
-                    this.mark = true;
-                    java.lang.Thread.sleep(data.waitTime);
-                }
-            }
-            if(this.mark) {
-                this.setAlpha(alpha - 0.01);
-                if(alpha <= 0) {
-                    java.lang.Thread.sleep(style.queueTime);
-                    this.close();
-
-                    return true;
-                }
-            }
-        }   
-    }
-
-    Notification.register("transparent", new TransparentNotification());
-
-    namespace NotificationStyles {
-        export const TRANSPARENT: INotificationStyle = {
-            waitTime: 2000,
-            queueTime: 1000,
-            scale: 2.3,
-            width: 220,
-            height: 30,
-            frame: {
-                type: "custom",
-                x: 0,
-                y: 0,
-                width: 220 * 2.3,
-                height: 30 * 2.3,
-                custom: {
-                    onSetup(element) {
-                        const paint = this.paint = new android.graphics.Paint();
-                        paint.setStyle(android.graphics.Paint.Style.STROKE);
-                        paint.setARGB(100, 0, 0, 0);
-        
-                        element.setSize(220 * 2.3, 30 * 2.3);
-                    },
-                    onDraw(element, canvas, scale) {
-                        canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), this.paint);
-                    }
-                }
-            },
-            text: {
-                type: "text",
-                x: 48,
-                y: 15,
-                font: {
-                    color: android.graphics.Color.WHITE,
-                },
-                maxLineLength: 30
-            },
-            icon: {
-                type: "image",
-                x: 8,
-                y: 10,
-            }
-        };
-    }
-
-    Notification.get("transparent").addStyle("transparent", NotificationStyles.TRANSPARENT);
-
-    Callback.addCallback("ItemUse", function(c, item, b, isE, player) {
-        const obj = {
-            text: {
-                type: "text",
-                text: Item.getName(item.id, item.data)
-            },
-            icon: {
-                type: "image",
-                item: item.id
-            }
-        } as INotificationRuntimeParams;
-
-        Notification.get("transparent").sendFor(player, "transparent", obj);
-    }); 
- * ```
  */
 
-abstract class Notification {
+abstract class Notification<T extends INotificationParams = INotificationParams> {
+
+    /**
+     * List of all notifications with special unique type. 
+     */
+
     public static list: Record<string, Notification> = {};
 
+    /**
+     * Type of animation. Must be unique 
+     */
+
     public type: string;
-    public styles: Record<string, INotificationStyle> = {};
-    public queue: INotificationInputData[] = [];
-    public lock: boolean = false;
-    public stop: boolean = false;
+
+    /**
+     * List of styles 
+     */
+
+    protected styles: Record<string, T> = {};
+
+    /**
+     * Queue, from this field takes values to restart animation after previous. 
+     */
+
+    protected queue: INotificationInputData<T>[] = [];
+
+    /**
+     * Lock value, influences on init. 
+     */
+
+    protected lock: boolean = false;
+
+    /**
+     * Stop value, influences on work of animation. 
+     */
+
+    protected stop: boolean = false;
+
+    /**
+     * Thread special for notification. 
+     */
+
     public thread: java.lang.Thread;
+
+    /**
+     * Current name of style from last start.
+     */
+
+    public currentStyleName!: string;
+
+    /**
+     * Current style, which usings in current notification from last start. 
+     */
+    
+    public currentStyle: T;
+
+    /**
+     * User interface, using in animation. 
+     */
 
     public UI: UI.Window = (() => {
         const window = new UI.Window();
-        window.setAsGameOverlay(true);
         window.setDynamic(true);
-        window.setTouchable(false);
         return window;
-    })()
+    })();
 
     public constructor(type?: string) {
-        if(type) this.type = type;  
+        if(type != null) {
+            this.type = type;
+        }  
     }
 
     /**
@@ -127,18 +79,20 @@ abstract class Notification {
      */
 
     public buildPacket() {
-        Network.addClientPacket(`packet.notification.send_${this.type}_notification`, (data: INotificationInputData) => {
+        Network.addClientPacket(`packet.notification.send_${this.type}_notification`, (data: INotificationInputData<T>) => {
             return this.init(data.styleName, data.runtimeStyle);
         });
     }
 
     /**
-     * Method to register new style for notification
+     * Method to register new style for notification.
      * @param name name of your style
      * @param style style description
      */
 
-    public addStyle(name: string, style: INotificationStyle): this {
+    public addStyle(name: string, style: T): this {
+        style.thread = style.thread || {};
+        style.elements = style.elements || {};
         this.styles[name] = style;
         return this;
     }   
@@ -154,7 +108,7 @@ abstract class Notification {
     }
 
     /**
-     * Method clears queue
+     * Method clears queue.
      */
 
     public clearQueue(): void {
@@ -162,7 +116,7 @@ abstract class Notification {
     }
 
     /**
-     * Changes lock state
+     * Changes lock state.
      * @param lock lock state
      */
 
@@ -171,127 +125,124 @@ abstract class Notification {
         return this;
     }
 
+    /**
+     * Default value of UI color.
+     */
+
     public getColor(): number {
         return android.graphics.Color.TRANSPARENT;
     }
+
+    /**
+     * Default value of x.
+     */
 
     public getLocationX(): number {
         return 0;
     }
 
+    /**
+     * Default value of y.
+     */
+
     public getLocationY(): number {
         return 0;
     }
+
+    /**
+     * Default value of width.
+     */
 
     public getWidth(): number {
         return 200;
     }
 
+    /**
+     * Default value of height.
+     */
+
     public getHeight(): number {
         return 100;
     }
+
+    /**
+     * Default value of scale.
+     * @default 1
+     */
 
     public getScale(): number {
         return 1;
     }
 
+    /**
+     * Time which using to sleep thread every cycle. Influences on speed of animation.
+     */
+
     public getSleepTime(): number {
         return 3;
     }
+
+    /**
+     * Time between restart animation with new data.
+     */
 
     public getQueueTime(): number {
         return 1000;
     }
 
-    public getWaitTime(): number {
+    /**
+     * Time to sleep in reach state.
+     */
+
+    public getReachTime(): number {
         return 2000;
     }
 
-    protected getWindowData(style: INotificationStyle, runtimeStyle: INotificationRuntimeParams): INotificationWindowData {
-        const scale = runtimeStyle.scale || style.scale || this.getScale();
-        const width = (runtimeStyle.width || style.width || this.getWidth()) * scale;
-        const height = (runtimeStyle.height || style.height || this.getHeight()) * scale;
+    /**
+     * @returns ui is touchable or not (if not, button clicks will not work). 
+     */
 
-        const content = {
-            location: {
-                x: runtimeStyle.x || style.x || this.getLocationX(),
-                y: runtimeStyle.y || style.y || this.getLocationY(),
-                width,
-                height
-            },
-            drawing: [{
-                type: "background",
-                color: runtimeStyle.color || style.color || this.getColor(),
-            }],
-            elements: {} as UI.ElementSet
-        } satisfies UI.WindowContent;
-
-        for(let element_name in style) {
-            const description: NotificationElement = style[element_name];
-
-            if(typeof description !== "number") {
-                const runtime: INotificationRuntimeParams[string] = runtimeStyle[element_name] || ({} as NotificationElement);
-
-                const defaultX = (runtime.x || description.x) * scale;
-                const defaultY = (runtime.y || description.y) * scale;
-
-                const element = Object.assign({}, description, runtime, {
-                    x: defaultX,
-                    y: defaultY
-                }) as NotificationElement;
-
-                if(description.text || runtime.text) {
-                    const maxLineLength = (runtime.maxLineLength || description.maxLineLength) || 20;
-                    const text = separateText(
-                        Translation.translate(runtime.text || description.text), 
-                        maxLineLength
-                    );
-                    element.text = text;
-                    if(text.length > maxLineLength) {
-                        element.multiline = true;
-                    }
-                }
-
-                if(description.item || runtime.item) {
-                    const item = runtime.item || description.item;
-
-                    element.type = "slot";
-                    element.bitmap = "unknown";
-                    element.source = { 
-                        id: typeof item == "string" ? (ItemID[item] || VanillaItemID[item] || BlockID[item] || VanillaBlockID[item]) : item, 
-                        count: 1, 
-                        data: 0 
-                    }
-                    element.iconScale = 1;
-                }
-
-                if("onInit" in element) {
-                    element.onInit(element, style, runtimeStyle);
-                }
-
-                content.elements[element_name] = element;
-            }
-        }
-
-        return (
-            { 
-                content: content,
-                queueTime: runtimeStyle.queueTime || style.queueTime || this.getQueueTime(), 
-                sleepTime: runtimeStyle.sleepTime || style.sleepTime || this.getSleepTime(), 
-                waitTime: runtimeStyle.waitTime || style.waitTime || this.getWaitTime()
-            }
-        )
+    public isTouchable(): boolean {
+        return true;
     }
 
-    public preventInit(styleName: string, runtimeStyle: INotificationRuntimeParams): boolean {
-        return this.lock == true || screenName !== "in_game_play_screen";
+    /**
+     * @returns ui is game overlay or not.
+     */
+
+    public isGameOverlay(): boolean {
+        return true;
     }
 
-    public onPreventInit(styleName: string, runtimeStyle: INotificationRuntimeParams): void {
-        this.queue.push({ styleName: styleName, runtimeStyle: runtimeStyle });
+    /**
+     * Condition to prevent init animation.
+     * @param styleName name of style
+     * @param runtimeStyle notification runtime params from init
+     * @returns 
+     */
+
+    public preventInit(styleName: string, runtimeStyle: Partial<T>): boolean {
+        return this.lock == true || screenName != "in_game_play_screen";
     }
 
-    public getStyle(styleName: string): INotificationStyle {
+    /**
+     * Method, works when animation was prevented.
+     * @param styleName name of style
+     * @param runtimeStyle notification runtime params from init
+     */
+
+    protected onPreventInit(styleName: string, runtimeStyle: Partial<T>): void {
+        this.queue.push({ styleName, runtimeStyle });
+    }
+
+    /**
+     * Method to get style.  
+     * Throws `java.lang.NoSuchFieldException` if style is not exists.
+     * @param styleName name of style
+     * @returns Notification style
+     */
+
+    public getStyle(styleName: string): T {
         if(!(styleName in this.styles)) {
             throw new java.lang.NoSuchFieldException(`Notification error: style ${styleName} is not exists`);
         }
@@ -300,31 +251,65 @@ abstract class Notification {
     }
 
     /**
+     * Method to set content of window
+     */
+
+    protected setContent(): void {
+        this.UI.setContent(
+            {
+            location: Notification.getStyledLocation(this.currentStyle),
+            drawing: [{
+                type: "background",
+                color: this.currentStyle.window.color
+            }],
+            elements: Notification.getStyledElementSet(this.currentStyle)
+        });
+        this.UI.forceRefresh();
+    }
+
+    /**
      * Method to open notification with specified style name and runtime data.
-     * @param styleName name of your style in {@link Notification.styles}
+     * @param styleName name of your style in {@link styles}
      * @param runtimeStyle your runtime data. It can be text or image
      */
 
-    public init(styleName: string, runtimeStyle: INotificationRuntimeParams): void {
+    public init(styleName: string, runtimeStyle: Partial<T>): void {
         if(this.preventInit(styleName, runtimeStyle)) {
             return this.onPreventInit(styleName, runtimeStyle);
         }
+        runtimeStyle.thread = runtimeStyle.thread || {};
+        runtimeStyle.window = runtimeStyle.window || {};
+        
+        this.currentStyleName = styleName;
 
         const style = this.getStyle(styleName);
-        const description = this.getWindowData(style, runtimeStyle);
+        this.currentStyle = { 
+            thread: {},
+            window: {},
+            elements: {} 
+        } as T;
+        this.preInit(style, runtimeStyle);
+
+        for(const elementName in style.elements) {
+            this.currentStyle.elements[elementName] = Object.assign({}, 
+                style.elements[elementName], 
+                runtimeStyle.elements[elementName]
+            );
+        }
+        
+        this.UI.setAsGameOverlay(this.currentStyle.window.overlay);
+        this.UI.setTouchable(this.currentStyle.window.touchable);
+        this.UI.updateWindowLocation();
 
         if(!this.UI.isOpened()) {
             this.UI.open();
         }
 
         this.setLock(true);
-        this.UI.setContent(description.content);
-        this.UI.updateWindowLocation();
-        this.UI.forceRefresh();
+        this.setContent();
+        this.postInit();
 
-        this.onInit(style, runtimeStyle, description);
-
-        this.thread = Threading.initThread(`thread.ui.${this.type}_notification`, () => this.run(style, runtimeStyle, description));  
+        this.thread = Threading.initThread(`thread.ui.notification.${this.type}`, () => this.run());  
         return;
     }
 
@@ -332,12 +317,12 @@ abstract class Notification {
      * Method to init thread, contains logic of change notifications. 
      */
 
-    public run(style: INotificationStyle, runtimeStyle: INotificationRuntimeParams, description: INotificationWindowData): void {
-        while(this.stop === false) {
-            java.lang.Thread.sleep(description.sleepTime);
+    protected run(): void {
+        while(this.stop == false) {
+            java.lang.Thread.sleep(this.currentStyle.thread.sleepTime);
 
-            const done = this.work(style, runtimeStyle, description);
-            if(done === true) {
+            const done = this.work();
+            if(done == true) {
                 this.setLock(false)
                 this.initLast();
                 break;
@@ -351,7 +336,7 @@ abstract class Notification {
      */
 
     public initLast(): boolean {
-        if(this.queue.length > 0 && screenName === "in_game_play_screen") {
+        if(this.queue.length > 0 && screenName == "in_game_play_screen") {
             const data = this.queue.shift();
             this.init(data.styleName, data.runtimeStyle);
 
@@ -361,29 +346,45 @@ abstract class Notification {
     }
 
     /**
-     * Method, calls after opening ui. It can be used to set default values.
-     * @param style Notification style from init.
-     * @param description Description of window.
+     * Method, works before opening ui.
+     * @param styleName name of style
+     * @param runtimeStyle notification runtime params from init
      */
 
-    protected onInit(style: INotificationStyle, runtimeStyle: INotificationRuntimeParams, description: INotificationWindowData): void {}
+    protected preInit(style: T, runtimeStyle: Partial<T>): void {
+        this.currentStyle.thread.sleepTime = (runtimeStyle.thread.sleepTime || style.thread.sleepTime) || this.getSleepTime();
+        this.currentStyle.thread.reachTime = (runtimeStyle.thread.reachTime || style.thread.reachTime) || this.getReachTime();
+        this.currentStyle.thread.queueTime = (runtimeStyle.thread.queueTime || style.thread.queueTime) || this.getQueueTime();
+        this.currentStyle.window.color = (runtimeStyle.window.color || style.window.color) || this.getColor();
+        this.currentStyle.window.height = (runtimeStyle.window.height || style.window.height) || this.getHeight();
+        this.currentStyle.window.width = (runtimeStyle.window.width || style.window.width) || this.getWidth();
+        this.currentStyle.window.scale = (runtimeStyle.window.scale || style.window.scale) || this.getScale();
+        this.currentStyle.window.x = (runtimeStyle.window.x || style.window.x) || this.getLocationX();
+        this.currentStyle.window.y = (runtimeStyle.window.y || style.window.y) || this.getLocationY();
+        this.currentStyle.window.overlay = (runtimeStyle.window.overlay || style.window.overlay) || this.isGameOverlay();
+        this.currentStyle.window.touchable = (runtimeStyle.window.touchable || style.window.touchable) || this.isTouchable();
+    }
+
+    /**
+     * Method, calls after opening ui. It can be used to set default values.
+     */
+
+    protected postInit(): void {};
 
     /**
      * Method, where your thread do work. Return true to reload thread with last element from queue.
-     * @param style Notification style from init
-     * @param runtimeStyle Notification runtime params from init
-     * @param description result of {@link getDescription description}
      */
-    protected abstract work(style: INotificationStyle, runtimeStyle: INotificationRuntimeParams, description: INotificationWindowData): boolean;
+
+    protected abstract work(): boolean;
 
     /**
-     * Method to send player from server notification with specified style name and runtime data.
+     * Method to send client from server notification with specified style name and runtime data.
      * @param styleName name of your style in {@link Notification.styles}
-     * @param runtimeStyle your runtime data. 
+     * @param runtimeStyle your runtime data
      */
 
-    public sendFor(player_uid: number, styleName: string, runtimeStyle: INotificationRuntimeParams): void {
-        const client = Network.getClientForPlayer(player_uid);
+    public sendFor(playerUid: number, styleName: string, runtimeStyle: INotificationParams): void {
+        const client = Network.getClientForPlayer(playerUid);
 
         if(client) {
             client.send(`packet.notification.send_${this.type}_notification`, { styleName: styleName, runtimeStyle: runtimeStyle });
@@ -392,32 +393,131 @@ abstract class Notification {
 
     /**
      * Method, calls with using close function.
-     * @param style Notification style from init.
-     * @param runtimeStyle your runtime data. 
-     * @param description result of {@link getDescription description}
      */
 
-    public onClose(style: INotificationStyle, runtimeStyle: INotificationRuntimeParams, description: INotificationWindowData) {}
+    protected onClose() {};
 
-    public close(style?: INotificationStyle, runtimeStyle?: INotificationRuntimeParams, description?: INotificationWindowData): void {
-        this.onClose(style, runtimeStyle, description);
+    /**
+     * Method to close ui.
+     */
+
+    public close(): void {
+        this.onClose();
         this.UI.close();
     }
 
     /**
-     * Method to get specified Notification by type. {@link AchievementNotification} for example can be got with Notification.{@link get}("achievement")
+     * Method works when elements reaches need position.
+     */
+    
+    protected onReach(): void {};
+
+    /**
+     * Method to get styled location
+     * @param style style
+     * @param x addition x value concating with main, optional
+     * @param y addition y value concating with main, optional
+     */
+
+    protected static getStyledLocation<T extends INotificationParams>(style: T, x?: number, y?: number): UI.WindowLocationParams {
+        return {
+            x: (x || 0) + style.window.x,
+            y: (y || 0) + style.window.y,
+            width: style.window.width * style.window.scale,
+            height: style.window.height * style.window.scale
+        };
+    }
+
+    /**
+     * Method to get element set from your style
+     * @param x addition x value concats to main, optional 
+     * @param y addition y value concats to main, optional
+     * @param keyword word, adds to default key name, optional. If defined, after keyword `"_"` will be aded
+     * @returns default `UI.ElementSet`
+     */
+
+    protected static getStyledElementSet<T extends INotificationParams>(style: T, x?: number, y?: number, keyword?: string): UI.ElementSet {
+        const elements: Record<string, NotificationElement> = {};
+
+        for(const elementName in style.elements) {
+            const description: NotificationElement = style.elements[elementName];
+            const element: NotificationElement = { ...description,
+                x: (x || 0) + description.x,
+                y: (y || 0) + description.y
+            };
+
+            if("preInit" in element) {
+                element.preInit(element, style);
+            }
+
+            if("text" in description) {
+                const maxLineLength = description.lineSize || 25;
+                const text = separateText(
+                    Translation.translate(description.text), 
+                    maxLineLength
+                );
+                element.text = text;
+                if(text.length > maxLineLength) {
+                    element.multiline = true;
+                }
+            }
+
+            if("item" in description) {
+                element.type = "slot";
+                element.bitmap = "INotificationParams";
+                element.source = { 
+                    id: typeof description.item == "string" ? 
+                    (
+                        ItemID[description.item] || 
+                        VanillaItemID[description.item] || 
+                        BlockID[description.item] || 
+                        VanillaBlockID[description.item]
+                    ) : description.item, 
+                    count: 1, 
+                    data: 0 
+                }
+                element.iconScale = description.scale || 1;
+            }
+
+            if("postInit" in element) {
+                element.postInit(element, style);
+            }
+
+            elements[(keyword != null ? keyword + "_" : "") + elementName] = element;
+        }
+        return elements;
+    }
+
+    /**
+     * Method to learn, exists type of notification or not.
+     */
+
+    public static has(type: string): boolean {
+        return type in this.list;
+    }
+
+    /**
+     * Method to get specified Notification by type. {@link AchievementNotification} for example can be got with Notification.{@link get}("achievement").   
+     * Throws `java.lang.NoSuchFieldException` if notification is not exists.
      * @param type type of the notification
      */
 
-    public static get<T extends Notification>(type: string): T {
-        if(!(type in this.list)) {
-            throw new java.lang.NoSuchFieldException("Notification: notification not found");
+    public static get<T extends Notification<INotificationParams>>(type: string): T {
+        if(!Notification.has(type)) {
+            throw new java.lang.NoSuchFieldException(`Notification: type "${type}" of notification is not exists`);
         }
         return this.list[type] as T;
     }
 
-    public static register(type: string, notification: Notification): Notification {
-        if(type in Notification.list) {
+    /**
+     * Method to register new notification with special type.  
+     * Throws `java.lang.SecurityException` if notification exists.
+     * @param type keyword to register notification
+     * @param notification object of notification
+     */
+
+    public static register(type: string, notification: Notification<INotificationParams>): Notification<INotificationParams> {
+        if(Notification.has(type)) {
             throw new java.lang.SecurityException("Notification: notification is already registered");
         }
 
@@ -427,6 +527,60 @@ abstract class Notification {
         }
 
         return Notification.list[type] = notification;
+    }
+
+    /**
+     * Method to learn is active type or not now.
+     */
+
+    public static isActive(type: string): boolean {
+        return Notification.get(type).lock;
+    }
+
+    /**
+     * Method to get active types. 
+     * @returns actived types of notifications
+     */
+
+    public static getActiveTypes(): string[] {
+        const types = [];
+        for(const i in Notification.list) {
+            if(Notification.list[i].lock == true) {
+                types.push(Notification.list[i]);
+            }
+        }
+        return types;
+    }
+
+    /**
+     * Method to init notification with special type.
+     * @param type type of notification
+     * @param styleName name of style
+     * @param runtimeStyle notification runtime params from init
+     */
+
+    public static init(type: string, styleName: string, runtimeStyle: INotificationParams): void {
+        return Notification.get(type).init(styleName, runtimeStyle);
+    }
+
+    /**
+     * Method to send client from server notification with specified style name and runtime data.  
+     * Throws `java.lang.NoSuchFieldException` if notification is not exists.
+     * @param playerUid unique player identifier
+     * @param type type of notification
+     * @param styleName name of style
+     * @param runtimeStyle notification runtime params from init
+     */
+
+    public static sendFor(playerUid: number, type: string, styleName: string, runtimeStyle: INotificationParams): void {
+        if(!Notification.has(type)) {
+            throw new java.lang.NoSuchFieldException(`Notification: type "${type}" of notification is not exists`)
+        }
+        const client = Network.getClientForPlayer(playerUid);
+
+        if(client) {
+            return client.send(`packet.notification.send_${type}_notification`, { styleName: styleName, runtimeStyle: runtimeStyle });
+        }
     }
 }
 
@@ -441,56 +595,42 @@ Callback.addCallback("LocalLevelLeft", () => {
 });
 
 Callback.addCallback("NativeGuiChanged", (name, lastName, isPushEvent) => {
-    if(name === "in_game_play_screen") {
+    screenName = name;
+
+    if(name == "in_game_play_screen") {
         for(const i in Notification.list) {
             const notification = Notification.list[i];
-
             notification.initLast();
         }
     }
 });
 
 namespace NotificationStyles {
-    export const TRANSPARENT: INotificationStyle = {
-        waitTime: 2000,
-        queueTime: 1000,
-        scale: 2.3,
-        width: 180,
-        height: 20,
-        text: {
-            type: "text",
-            x: 48,
-            y: 15,
-            font: {
-                color: android.graphics.Color.WHITE,
-            },
-            maxLineLength: 30
+    export const TRANSPARENT: INotificationParams = {
+        thread: {
+            reachTime: 2000,
+            queueTime: 1000
         },
-        icon: {
-            type: "image",
-            x: 8,
-            y: 10
+        window: {
+            scale: 2.3,
+            width: 180,
+            height: 20
+        },
+        elements: {
+            text: {
+                type: "text",
+                x: 48,
+                y: 15,
+                font: {
+                    color: android.graphics.Color.WHITE
+                },
+                lineSize: 30
+            },
+            icon: {
+                type: "image",
+                x: 8,
+                y: 10
+            }
         }
     };
 }
-
-/*
-Callback.addCallback("ItemUse", function(c, item, b, isE, player) {
-    const obj = {
-        text: {
-            type: "text",
-            text: Item.getName(item.id, item.data)
-        },
-        icon: {
-            type: "image",
-            item: item.id
-        }
-    } as INotificationRuntimeParams;
-
-    if(Entity.getSneaking(player)) {
-        Notification.get("achievement").sendFor(player, "transparent", obj);
-    } else {
-        Notification.get("transparent").sendFor(player, "transparent", obj);
-    };
-}); //example debug
-*/

@@ -37,7 +37,13 @@
 			"type": "library",
 			"language": "typescript",
             "target": "../../release/LangFile/LangFile.js"
-		}
+		},
+        {
+            "source": "dev/Notification",
+            "type": "library",
+            "language": "typescript",
+            "target": "../../release/Notification/Notification.js"
+        }
 	],
 	"additional": [
 		{

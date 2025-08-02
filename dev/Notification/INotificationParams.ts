@@ -1,17 +1,43 @@
-interface INotificationParams extends INotificationTimerParams {
+interface INotificationParams<window = {}, thread = {}> extends INotificationTimerParams<thread> {
     /**
-     * scale of all elements
+     * Values to describe window.
      */
-    scale: number,
+    window: {
+        /**
+         * scale of all elements.
+         */
+        scale?: number,
+        /**
+         * width of window in units.
+         */
+        width?: number,
+        /**
+         * height of window in units.
+         */
+        height?: number,
+        /**
+         * x position of window.
+         */
+        x?: number,
+        /**
+         * y position of window.
+         */
+        y?: number
+        /**
+         * color of window in red green blue alpha.
+         */
+        color?: number;
+        /**
+         * if true, window will be game overlay (can you hear sounds).
+         */
+        overlay?: boolean;
+        /**
+         * if true, window will be touchable (you can touch window with specified element events).
+         */
+        touchable?: boolean;
+    } & window;
     /**
-     * width of window. Influences on background width
+     * Elements from {@link UI.ElementSet}.
      */
-    width: number,
-    /**
-     * height of window. Influences on background height
-     */
-    height: number,
-    x?: number,
-    y?: number
-    color?: number;
+    elements: Record<string, NotificationElement>;
 }

@@ -1,4 +1,4 @@
-interface INotificationInputData { 
+interface INotificationInputData<T> { 
     styleName: string, 
-    runtimeStyle: INotificationRuntimeParams 
+    runtimeStyle: Partial<T> 
 }
