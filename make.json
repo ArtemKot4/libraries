@@ -27,22 +27,10 @@
 			"language": "javascript"
 		},
         {
-			"source": "dev/Command",
-			"type": "library",
-			"language": "typescript",
-            "target": "../../release/Command/Command.js"
-		},
-        {
-			"source": "dev/LangFile",
-			"type": "library",
-			"language": "typescript",
-            "target": "../../release/LangFile/LangFile.js"
-		},
-        {
-            "source": "dev/Notification",
+            "source": "dev/Component",
             "type": "library",
             "language": "typescript",
-            "target": "../../release/Notification/Notification.js"
+            "target": "../../release/Component/Component.js"
         }
 	],
 	"additional": [
@@ -67,7 +55,13 @@
 		"innercore",
 		"nativejs"
 	],
-	"excludeFromRelease": []
+	"excludeFromRelease": [],
+    "tsconfig": {
+        "jsx": "react",
+		"jsxFactory": "UI.parseElement",
+		"jsxFragmentFactory": "UI.Fragment",
+		"moduleResolution": "nodenext"
+    }
 }
 
 

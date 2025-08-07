@@ -1,0 +1,6 @@
+{
+    "jsx": "react",
+    "jsxFactory": "UI.parseElement",
+    "jsxFragmentFactory": "UI.Fragment",
+    "moduleResolution": "nodenext"
+}
