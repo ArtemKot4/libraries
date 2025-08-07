@@ -18,7 +18,7 @@
 
 Объекты так:
 ```tsx
-<font={{ size: 30 }}
+<font={{ size: 30 }}>
 ```  
 
 В случае, если компоненты ничего не принимают, их можно записать короче:
@@ -86,7 +86,7 @@ const Meow = () => (
 Создадим подобный компонент:
 ```tsx
 const Title = (properties, child) => {
-    return <element type="text" font={{color: 0.375, size: 30 }} key={properties.key}>{ child }</element>
+    return <element type="text" font={{ color: 0.375, size: 30 }} key={properties.key}>{ child }</element>
 }
 ```
 Передадим данные:
@@ -113,15 +113,15 @@ const title = Title({
 Создадим сразу ряд компонентов, чтобы рассмотреть возможности:
 ```tsx
 const Author = (properties, child) => (
-    <author type="text" font={{ color: android.graphics.Color.BLACK, size: 15 }} x={200} y={50}>Автор: {child}</author>
+    <author type="text" font={{ color: android.graphics.Color.BLACK, size: 15 }} x={200} y={50}>Автор: { child }</author>
 );
 
 const Tools = (properties, child) => (
-    <tools type="text" font={{size: 10}} x={200} y={60}>Инструменты: {properties.tools.toString()}</tools>
+    <tools type="text" font={{ size: 10 }} x={200} y={60}>Инструменты: { properties.tools.toString() }</tools>
 );
 
 const Mod = (properties, child) => (
-    <mod type="text" font={{size: 10}} x={200} y={75}>Мод: {child}</mod>
+    <mod type="text" font={{ size: 10 }} x={200} y={75}>Мод: { child }</mod>
 );
 ```
 Теперь создадим окно и компонент, который будет рисовать текст о нике автора, использованных инструментах и названии его мода.
@@ -142,7 +142,7 @@ window.setContent({
 ## Подключение
 1. Найдите в этой папке файл **settings.json**, содержащий настройки для транспилятора TypeScript;
 2. Вставьте значения внутрь вашего tsconfig, а в случае тулчейна от автора Nernar добавьте поле **tsconfig** с значениями из файла settings.json в файл make.json;
-3. Добавьте файл **Component.tsx** либо Component.js в ваш проект и объявите его в файле **.includes** или **tsconfig.json**;
+3. Добавьте файл **Component.tsx** либо **Component.js** в ваш проект и объявите его в файле **.includes** или **tsconfig.json**;
 4. Переименуйте расширения файлов, где будете использовать компоненты, в **tsx**;
 5. Запустите задачу пересборки деклараций или поменяйте нужное вручную;
 ## Заключение

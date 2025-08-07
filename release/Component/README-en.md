@@ -18,7 +18,7 @@ Numbers, for example:
 
 Objects:
 ```tsx
-<font={{ size: 30 }}
+<font={{ size: 30 }}>
 ```  
 
 In case, when components inputs nothing, his can be shorten:
@@ -113,15 +113,15 @@ Use component can you form groups of component and provide to your UI in one tim
 Go create row of components to consider:
 ```tsx
 const Author = (properties, child) => (
-    <author type="text" font={{ color: android.graphics.Color.BLACK, size: 15 }} x={200} y={50}>Author: {child}</author>
+    <author type="text" font={{ color: android.graphics.Color.BLACK, size: 15 }} x={200} y={50}>Author: { child }</author>
 );
 
 const Tools = (properties, child) => (
-    <tools type="text" font={{size: 10}} x={200} y={60}>Tools: {properties.tools.toString()}</tools>
+    <tools type="text" font={{ size: 10 }} x={200} y={60}>Tools: { properties.tools.toString() }</tools>
 );
 
 const Mod = (properties, child) => (
-    <mod type="text" font={{size: 10}} x={200} y={75}>Mod: {child}</mod>
+    <mod type="text" font={{ size: 10 }} x={200} y={75}>Mod: { child }</mod>
 );
 ```
 Then go create window and component, shows name of author, tools and name of mod.
@@ -142,7 +142,7 @@ window.setContent({
 ## Activation
 1. Find in this folder file **settings.json**, contains settings for compiler of TypeScript;
 2. Paste values inside your tsconfig, if you use toolchain from Nernar, paste field **tsconfig** with values from file settings.json in file make.json;
-3. Add file **Component.tsx** or Component.js in your project and connect to **.includes** or **tsconfig.json**;
+3. Add file **Component.tsx** or **Component.js** in your project and connect to **.includes** or **tsconfig.json**;
 4. Rename type of files, when you will use components, in **tsx**;
 5. Start task of rebuild declarations or rebuild by yourself;
 ## Ending
