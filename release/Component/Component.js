@@ -96,7 +96,18 @@ var UI;
             if ("ondraw" in properties) {
                 properties.custom.onDraw = properties.ondraw;
             }
-            if ("onrelease" in properties) { }
+            if ("onrelease" in properties) {
+                properties.custom.onRelease = properties.onrelease;
+            }
+            if ("onreset" in properties) {
+                properties.custom.onReset = properties.onreset;
+            }
+            if ("onsetup" in properties) {
+                properties.custom.onSetup = properties.onsetup;
+            }
+            if ("ontouchreleased" in properties) {
+                properties.custom.onTouchReleased = properties.ontouchreleased;
+            }
         }
         if (tag == "element" && !("key" in properties)) {
             return properties;
