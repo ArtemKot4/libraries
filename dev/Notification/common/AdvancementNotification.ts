@@ -39,16 +39,54 @@ class AdvancementNotification extends Notification<IAdvancementParams> {
     }
 
     protected override setContent(): void {
+        //const style = this.getStyle(this.currentStyleName);
+        const height = (this.currentStyle.window.height * this.currentStyle.window.scale) * this.currentStyle.window.maxCount;
+
+        const elements = Notification.getStyledElementSet(this.currentStyle);
+        // let count = 1;
+        // for(let i = 0; i < this.queue.length; i++) {
+        //     const element = this.queue[i];
+        //     if(element != null) {
+        //         element.runtimeStyle.window = element.runtimeStyle.window || {};
+        //     }
+        //     if(
+        //         count >= this.currentStyle.window.maxCount || 
+        //         typeof element != "object" ||
+        //         element.styleName != this.currentStyleName || 
+        //         element.runtimeStyle.window.position != null && element.runtimeStyle.window.position != this.currentStyle.window.position || 
+        //         element.runtimeStyle.window.width != null && element.runtimeStyle.window.width != this.currentStyle.window.width || 
+        //         element.runtimeStyle.window.height != null && element.runtimeStyle.window.height != this.currentStyle.window.height || 
+        //         element.runtimeStyle.window.scale != null && element.runtimeStyle.window.scale != this.currentStyle.window.scale
+        //     ) {
+        //         break;
+        //     }
+        //     const elementSet = Notification.getStyledElementSet(
+        //         this.getCommonStyle(style, element.runtimeStyle), 0, height * count, String(i)
+        //     );
+        //     Object.assign(elements, elementSet);
+        //     this.queue.splice(i, 1);
+        //     i--;
+        //     count++;
+        // }
+
+        // for(const i in elements) {
+        //     if("height" in elements[i]) {
+        //         elements[i].height = Math.min(elements[i].height, height / count);
+        //     }
+        // }
+
         this.UI.setContent({
-            location: Notification.getStyledLocation(
-                this.currentStyle, 
-                this.currentStyle.window.position == "left" ? 0 : 1000 - this.currentStyle.window.width * this.currentStyle.window.scale
-            ),
+            location: {
+                x: this.currentStyle.window.x + (this.currentStyle.window.position == "left" ? 0 : 1000 - this.currentStyle.window.width * this.currentStyle.window.scale),
+                y: this.currentStyle.window.y,
+                width: this.currentStyle.window.width * this.currentStyle.window.scale,
+                height: height
+            },
             drawing: [{
                 type: "background",
                 color: this.currentStyle.window.color
             }],
-            elements: Notification.getStyledElementSet(this.currentStyle)
+            elements: elements
         });
         this.UI.forceRefresh();
     }
@@ -63,21 +101,21 @@ class AdvancementNotification extends Notification<IAdvancementParams> {
         this.mark = false;
         this.maxOffset = this.currentStyle.window.width * this.currentStyle.window.scale;
         this.offset = this.currentStyle.window.position == "left" ? -this.maxOffset : this.maxOffset * 2; 
+        this.work = this.currentStyle.window.position == "left" ? this.animationLeft : this.animationRight;
 
-        this.updateElementsOffset(this.offset);
         this.setDefaultOffsets();
-        this.work = this.currentStyle.window.position == "left" ? this.moveLeft : this.moveRight;
+        this.updateElementsOffset(this.offset);
     }
 
-    public moveLeft(): boolean {
-        if(!this.mark) {
+    public animationLeft(): boolean {
+        if(this.mark == false) {
             if(this.offset < 0) {
                 this.updateElementsOffset(this.offset += 2);
             } else {
                 this.mark = true;
 
                 java.lang.Thread.sleep(this.currentStyle.thread.reachTime);
-                this.onReach();
+                this.reach();
             }
         } else {
             if(this.offset > -this.maxOffset) {
@@ -91,15 +129,15 @@ class AdvancementNotification extends Notification<IAdvancementParams> {
         }
     }
 
-    public moveRight(): boolean {
-        if(!this.mark) {
+    public animationRight(): boolean {
+        if(this.mark == false) {
             if(this.offset > this.maxOffset) {
                 this.updateElementsOffset(this.offset -= 2);
             } else {
                 this.mark = true;
 
                 java.lang.Thread.sleep(this.currentStyle.thread.reachTime);
-                this.onReach();
+                this.reach();
             }
         } else {
             if(this.offset < this.maxOffset * 2) {
@@ -118,76 +156,4 @@ class AdvancementNotification extends Notification<IAdvancementParams> {
     }
 }
 
-Notification.register("advancement", new AdvancementNotification());
-// .addStyle("transparent", {
-//     thread: {  
-//         reachTime: 2000,
-//         queueTime: 1000
-//     },
-//     window: {
-//         width: 240 * 2,
-//         height: 40 * 2
-//     },
-//     elements: {
-//         background: {
-//             type: "image",
-//             x: 0,
-//             y: 0,
-//             width: 240 * 2,
-//             height: 40 * 2,
-//             bitmap: "notification"
-//         },
-//         text: {
-//             type: "text",
-//             x: 50,
-//             y: 9,
-//             lineSize: 30,
-//             font: {
-//                 color: android.graphics.Color.WHITE,
-//                 size: 25
-//             }
-//         },
-//         icon: {
-//             type: "image",
-//             x: 100,
-//             y: 5,
-//             scale: 1.8,
-//             size: 90,
-//             width: 27,
-//             height: 27
-//         }
-//     }
-// });
-
-// Callback.addCallback("ItemUse", (c, i, b, isE, p) => {
-//     if(i.id == VanillaItemID.diamond) {
-//         Notification.get("achievement").init("transparent", {
-//             elements: {
-//                 text: {
-//                     type: "text",
-//                     text: "2222"
-//                 },
-//                 icon: {
-//                     type: "image",
-//                     item: 263
-//                 }
-//             }
-//         })
-//     } else if (i.id == VanillaItemID.emerald) {
-//         Notification.get<AdvancementNotification>("advancement").init("transparent", {
-//             window: {
-//                 position: Entity.getSneaking(p) == true ? "left" : "right"
-//             },
-//             elements: {
-//                 text: {
-//                     type: "text",
-//                     text: String(Math.floor(Math.random()*20)-1)
-//                 },
-//                 icon: {
-//                     type: "image",
-//                     item: 263
-//                 }
-//             }
-//         })
-//     }
-// });
+Notification.register("advancement", new AdvancementNotification())

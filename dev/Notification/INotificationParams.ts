@@ -1,4 +1,4 @@
-interface INotificationParams<window = {}, thread = {}> extends INotificationTimerParams<thread> {
+interface INotificationParams<window = {}, thread = {}, events = {}> extends INotificationTimerParams<thread> {
     /**
      * Values to describe window.
      */
@@ -36,6 +36,13 @@ interface INotificationParams<window = {}, thread = {}> extends INotificationTim
          */
         touchable?: boolean;
     } & window;
+    /**
+     * Events
+     */
+    events?: {
+        onReach?(notification: Notification): void;
+        onClose?(notification: Notification): void;
+    } & events
     /**
      * Elements from {@link UI.ElementSet}.
      */

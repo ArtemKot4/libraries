@@ -27,10 +27,10 @@
 			"language": "javascript"
 		},
         {
-            "source": "dev/Component",
+            "source": "dev/Notification",
             "type": "library",
             "language": "typescript",
-            "target": "../../release/Component/Component.js"
+            "target": "../../release/Notification/Notification.js"
         }
 	],
 	"additional": [

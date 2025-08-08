@@ -12,14 +12,14 @@ class TransparentNotification extends Notification {
 
     protected override work(): boolean {
         const alpha = this.UI.layout.getAlpha();
-        if(alpha < 1 && !this.mark) {
+        if(alpha < 1 && this.mark == false) {
             this.setAlpha(alpha + 0.01);
         } else {
             if(!this.mark) {
                 this.mark = true;
             
                 java.lang.Thread.sleep(this.currentStyle.thread.reachTime);
-                this.onReach();
+                this.reach();
             }
         }
         if(this.mark) {

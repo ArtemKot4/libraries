@@ -15,8 +15,8 @@ namespace UI {
         }
         type Element = (UI.Elements | (UI.UICustomElement & CustomEvents)) & ClickerEvents & { key?: string };
         export type Node = string[];
-        export type properties = Nullable<JSX.Element>;
-        export type Component = (properties: properties, ...children: Node) => Node;
+        export type Properties = Nullable<JSX.Element>;
+        export type Component = (properties: Properties, ...children: Node) => Node;
         export type Tag = Component | string;
     }
 
@@ -27,7 +27,7 @@ namespace UI {
         }
     }
 
-    export function parseElement(tag: JSX.Tag, properties: JSX.properties, ...children: JSX.Node): UI.Element {
+    export function parseElement(tag: JSX.Tag, properties: JSX.Properties, ...children: JSX.Node): UI.Element {
         if(typeof tag == "function") {
             return tag({ ...properties }, ...children);
         }
@@ -79,7 +79,7 @@ namespace UI {
         }
     }
 
-    export function Fragment(properties: JSX.properties, ...children: JSX.Node): UI.ElementSet {
+    export function Fragment(properties: JSX.Properties, ...children: JSX.Node): UI.ElementSet {
         const elementSet = {};
 
         for(const i in children) {

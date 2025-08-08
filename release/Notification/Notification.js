@@ -1,14 +1,3 @@
-/**
- * Данная библиотека была разработана для упрощения создания экранных анимаций.
- * Библиотека разработана с упором на производительность и высокую скорость работы, что позволяет вам создавать собственные анимации.
- *
- * Я признателен вам за использование библиотеки и надеюсь, что вы понимаете:
- * код открыт для ознакомления, однако копирование любой части вне контекста использования данной библиотеки недопустимо.
- *
- * Автор проекта: ArtemKot — github.com/ArtemKot4
- * Год основания: 2025
- * Вопросы можете задать мне в discord: discordapp.com/users/908847403073937419
- */
 var __values = (this && this.__values) || function(o) {
     var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
     if (m) return m.call(o);
@@ -20,6 +9,17 @@ var __values = (this && this.__values) || function(o) {
     };
     throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
 };
+/**
+ * Данная библиотека была разработана для упрощения создания экранных анимаций.
+ * Библиотека разработана с упором на производительность и высокую скорость работы, что позволяет вам создавать собственные быстрые и стабильные анимации.
+ *
+ * Я признателен вам за использование библиотеки и надеюсь, что вы понимаете:
+ * код открыт для ознакомления, однако копирование любой части вне контекста использования данной библиотеки недопустимо.
+ *
+ * Автор проекта: ArtemKot — github.com/ArtemKot4
+ * Год основания: 2025
+ * Вопросы можете задать мне в discord: discordapp.com/users/908847403073937419
+ */
 LIBRARY({
     name: "Notification",
     shared: true,
@@ -262,8 +262,6 @@ var Notification = /** @class */ (function () {
         if (this.preventInit(styleName, runtimeStyle)) {
             return this.onPreventInit(styleName, runtimeStyle);
         }
-        runtimeStyle.thread = runtimeStyle.thread || {};
-        runtimeStyle.window = runtimeStyle.window || {};
         this.currentStyleName = styleName;
         var style = this.getStyle(styleName);
         this.currentStyle = {
@@ -272,9 +270,6 @@ var Notification = /** @class */ (function () {
             elements: {}
         };
         this.preInit(style, runtimeStyle);
-        for (var elementName in style.elements) {
-            this.currentStyle.elements[elementName] = Object.assign({}, style.elements[elementName], runtimeStyle.elements[elementName]);
-        }
         this.UI.setAsGameOverlay(this.currentStyle.window.overlay);
         this.UI.setTouchable(this.currentStyle.window.touchable);
         this.UI.updateWindowLocation();
@@ -302,7 +297,7 @@ var Notification = /** @class */ (function () {
         }
     };
     /**
-     * Method {@link init inits} and deletes last notification from queue
+     * Method {@link init inits} and deletes last notification from queue.
      * @returns true if notification was inited
      */
     Notification.prototype.initLast = function () {
@@ -314,22 +309,42 @@ var Notification = /** @class */ (function () {
         return false;
     };
     /**
+     * Method to get common style from basic style and runtime data.
+     * @param style your style
+     * @param runtimeStyle your runtime data
+     */
+    Notification.prototype.getCommonStyle = function (style, runtimeStyle) {
+        runtimeStyle.thread = runtimeStyle.thread || {};
+        runtimeStyle.window = runtimeStyle.window || {};
+        var commonStyle = {
+            thread: {},
+            window: {},
+            elements: {},
+            events: {}
+        };
+        commonStyle.thread.sleepTime = (runtimeStyle.thread.sleepTime || style.thread.sleepTime) || this.getSleepTime();
+        commonStyle.thread.reachTime = (runtimeStyle.thread.reachTime || style.thread.reachTime) || this.getReachTime();
+        commonStyle.thread.queueTime = (runtimeStyle.thread.queueTime || style.thread.queueTime) || this.getQueueTime();
+        commonStyle.window.color = (runtimeStyle.window.color || style.window.color) || this.getColor();
+        commonStyle.window.height = (runtimeStyle.window.height || style.window.height) || this.getHeight();
+        commonStyle.window.width = (runtimeStyle.window.width || style.window.width) || this.getWidth();
+        commonStyle.window.scale = (runtimeStyle.window.scale || style.window.scale) || this.getScale();
+        commonStyle.window.x = (runtimeStyle.window.x || style.window.x) || this.getLocationX();
+        commonStyle.window.y = (runtimeStyle.window.y || style.window.y) || this.getLocationY();
+        commonStyle.window.overlay = (runtimeStyle.window.overlay || style.window.overlay) || this.isGameOverlay();
+        commonStyle.window.touchable = (runtimeStyle.window.touchable || style.window.touchable) || this.isTouchable();
+        for (var elementName in style.elements) {
+            commonStyle.elements[elementName] = Object.assign({}, style.elements[elementName], runtimeStyle.elements[elementName] || {});
+        }
+        return commonStyle;
+    };
+    /**
      * Method, works before opening ui.
      * @param styleName name of style
      * @param runtimeStyle notification runtime params from init
      */
     Notification.prototype.preInit = function (style, runtimeStyle) {
-        this.currentStyle.thread.sleepTime = (runtimeStyle.thread.sleepTime || style.thread.sleepTime) || this.getSleepTime();
-        this.currentStyle.thread.reachTime = (runtimeStyle.thread.reachTime || style.thread.reachTime) || this.getReachTime();
-        this.currentStyle.thread.queueTime = (runtimeStyle.thread.queueTime || style.thread.queueTime) || this.getQueueTime();
-        this.currentStyle.window.color = (runtimeStyle.window.color || style.window.color) || this.getColor();
-        this.currentStyle.window.height = (runtimeStyle.window.height || style.window.height) || this.getHeight();
-        this.currentStyle.window.width = (runtimeStyle.window.width || style.window.width) || this.getWidth();
-        this.currentStyle.window.scale = (runtimeStyle.window.scale || style.window.scale) || this.getScale();
-        this.currentStyle.window.x = (runtimeStyle.window.x || style.window.x) || this.getLocationX();
-        this.currentStyle.window.y = (runtimeStyle.window.y || style.window.y) || this.getLocationY();
-        this.currentStyle.window.overlay = (runtimeStyle.window.overlay || style.window.overlay) || this.isGameOverlay();
-        this.currentStyle.window.touchable = (runtimeStyle.window.touchable || style.window.touchable) || this.isTouchable();
+        this.currentStyle = this.getCommonStyle(style, runtimeStyle);
     };
     /**
      * Method, calls after opening ui. It can be used to set default values.
@@ -353,11 +368,26 @@ var Notification = /** @class */ (function () {
     Notification.prototype.onClose = function () { };
     ;
     /**
-     * Method to close ui.
+     * Method to close ui and call close events.
      */
     Notification.prototype.close = function () {
+        if ("onClose" in this.currentStyle.events) {
+            this.currentStyle.events.onClose(this);
+        }
         this.onClose();
         this.UI.close();
+        return;
+    };
+    /**
+     * Method to call reach events.
+     *
+     */
+    Notification.prototype.reach = function () {
+        if ("onReach" in this.currentStyle.events) {
+            this.currentStyle.events.onReach(this);
+        }
+        this.onReach();
+        return;
     };
     /**
      * Method works when elements reaches need position.
@@ -382,7 +412,7 @@ var Notification = /** @class */ (function () {
      * Method to get element set from your style
      * @param x addition x value concats to main, optional
      * @param y addition y value concats to main, optional
-     * @param keyword word, adds to default key name, optional. If defined, after keyword `"_"` will be aded
+     * @param keyword word, adds to default key name, optional. If defined, after keyword `"_"` will be added
      * @returns default `UI.ElementSet`
      */
     Notification.getStyledElementSet = function (style, x, y, keyword) {
@@ -449,7 +479,7 @@ var Notification = /** @class */ (function () {
         if (Notification.has(type)) {
             throw new java.lang.SecurityException("Notification: notification is already registered");
         }
-        if (!notification.type) {
+        if (notification.type == null) {
             notification.type = type;
             notification.buildPacket();
         }
@@ -463,7 +493,7 @@ var Notification = /** @class */ (function () {
     };
     /**
      * Method to get active types.
-     * @returns actived types of notifications
+     * @returns active types of notifications
      */
     Notification.getActiveTypes = function () {
         var types = [];
@@ -496,7 +526,7 @@ var Notification = /** @class */ (function () {
             throw new java.lang.NoSuchFieldException("Notification: type \"".concat(type, "\" of notification is not exists"));
         }
         var client = Network.getClientForPlayer(playerUid);
-        if (client) {
+        if (client != null) {
             return client.send("packet.notification.send_".concat(type, "_notification"), { styleName: styleName, runtimeStyle: runtimeStyle });
         }
     };
@@ -584,14 +614,14 @@ var TransparentNotification = /** @class */ (function (_super) {
     };
     TransparentNotification.prototype.work = function () {
         var alpha = this.UI.layout.getAlpha();
-        if (alpha < 1 && !this.mark) {
+        if (alpha < 1 && this.mark == false) {
             this.setAlpha(alpha + 0.01);
         }
         else {
             if (!this.mark) {
                 this.mark = true;
                 java.lang.Thread.sleep(this.currentStyle.thread.reachTime);
-                this.onReach();
+                this.reach();
             }
         }
         if (this.mark) {
@@ -637,14 +667,14 @@ var AchievementNotification = /** @class */ (function (_super) {
         this.updateElementsHeight(this.height);
     };
     AchievementNotification.prototype.work = function () {
-        if (!this.mark) {
+        if (this.mark == false) {
             if (this.height < 0) {
                 this.updateElementsHeight(this.height++);
             }
             else {
                 this.mark = true;
                 java.lang.Thread.sleep(this.currentStyle.thread.reachTime);
-                this.onReach();
+                this.reach();
             }
         }
         else {
@@ -688,13 +718,51 @@ var AdvancementNotification = /** @class */ (function (_super) {
         return 2;
     };
     AdvancementNotification.prototype.setContent = function () {
+        //const style = this.getStyle(this.currentStyleName);
+        var height = (this.currentStyle.window.height * this.currentStyle.window.scale) * this.currentStyle.window.maxCount;
+        var elements = Notification.getStyledElementSet(this.currentStyle);
+        // let count = 1;
+        // for(let i = 0; i < this.queue.length; i++) {
+        //     const element = this.queue[i];
+        //     if(element != null) {
+        //         element.runtimeStyle.window = element.runtimeStyle.window || {};
+        //     }
+        //     if(
+        //         count >= this.currentStyle.window.maxCount || 
+        //         typeof element != "object" ||
+        //         element.styleName != this.currentStyleName || 
+        //         element.runtimeStyle.window.position != null && element.runtimeStyle.window.position != this.currentStyle.window.position || 
+        //         element.runtimeStyle.window.width != null && element.runtimeStyle.window.width != this.currentStyle.window.width || 
+        //         element.runtimeStyle.window.height != null && element.runtimeStyle.window.height != this.currentStyle.window.height || 
+        //         element.runtimeStyle.window.scale != null && element.runtimeStyle.window.scale != this.currentStyle.window.scale
+        //     ) {
+        //         break;
+        //     }
+        //     const elementSet = Notification.getStyledElementSet(
+        //         this.getCommonStyle(style, element.runtimeStyle), 0, height * count, String(i)
+        //     );
+        //     Object.assign(elements, elementSet);
+        //     this.queue.splice(i, 1);
+        //     i--;
+        //     count++;
+        // }
+        // for(const i in elements) {
+        //     if("height" in elements[i]) {
+        //         elements[i].height = Math.min(elements[i].height, height / count);
+        //     }
+        // }
         this.UI.setContent({
-            location: Notification.getStyledLocation(this.currentStyle, this.currentStyle.window.position == "left" ? 0 : 1000 - this.currentStyle.window.width * this.currentStyle.window.scale),
+            location: {
+                x: this.currentStyle.window.x + (this.currentStyle.window.position == "left" ? 0 : 1000 - this.currentStyle.window.width * this.currentStyle.window.scale),
+                y: this.currentStyle.window.y,
+                width: this.currentStyle.window.width * this.currentStyle.window.scale,
+                height: height
+            },
             drawing: [{
                     type: "background",
                     color: this.currentStyle.window.color
                 }],
-            elements: Notification.getStyledElementSet(this.currentStyle)
+            elements: elements
         });
         this.UI.forceRefresh();
     };
@@ -707,19 +775,19 @@ var AdvancementNotification = /** @class */ (function (_super) {
         this.mark = false;
         this.maxOffset = this.currentStyle.window.width * this.currentStyle.window.scale;
         this.offset = this.currentStyle.window.position == "left" ? -this.maxOffset : this.maxOffset * 2;
-        this.updateElementsOffset(this.offset);
+        this.work = this.currentStyle.window.position == "left" ? this.animationLeft : this.animationRight;
         this.setDefaultOffsets();
-        this.work = this.currentStyle.window.position == "left" ? this.moveLeft : this.moveRight;
+        this.updateElementsOffset(this.offset);
     };
-    AdvancementNotification.prototype.moveLeft = function () {
-        if (!this.mark) {
+    AdvancementNotification.prototype.animationLeft = function () {
+        if (this.mark == false) {
             if (this.offset < 0) {
                 this.updateElementsOffset(this.offset += 2);
             }
             else {
                 this.mark = true;
                 java.lang.Thread.sleep(this.currentStyle.thread.reachTime);
-                this.onReach();
+                this.reach();
             }
         }
         else {
@@ -733,15 +801,15 @@ var AdvancementNotification = /** @class */ (function (_super) {
             }
         }
     };
-    AdvancementNotification.prototype.moveRight = function () {
-        if (!this.mark) {
+    AdvancementNotification.prototype.animationRight = function () {
+        if (this.mark == false) {
             if (this.offset > this.maxOffset) {
                 this.updateElementsOffset(this.offset -= 2);
             }
             else {
                 this.mark = true;
                 java.lang.Thread.sleep(this.currentStyle.thread.reachTime);
-                this.onReach();
+                this.reach();
             }
         }
         else {
@@ -761,77 +829,6 @@ var AdvancementNotification = /** @class */ (function (_super) {
     return AdvancementNotification;
 }(Notification));
 Notification.register("advancement", new AdvancementNotification());
-// .addStyle("transparent", {
-//     thread: {  
-//         reachTime: 2000,
-//         queueTime: 1000
-//     },
-//     window: {
-//         width: 240 * 2,
-//         height: 40 * 2
-//     },
-//     elements: {
-//         background: {
-//             type: "image",
-//             x: 0,
-//             y: 0,
-//             width: 240 * 2,
-//             height: 40 * 2,
-//             bitmap: "notification"
-//         },
-//         text: {
-//             type: "text",
-//             x: 50,
-//             y: 9,
-//             lineSize: 30,
-//             font: {
-//                 color: android.graphics.Color.WHITE,
-//                 size: 25
-//             }
-//         },
-//         icon: {
-//             type: "image",
-//             x: 100,
-//             y: 5,
-//             scale: 1.8,
-//             size: 90,
-//             width: 27,
-//             height: 27
-//         }
-//     }
-// });
-// Callback.addCallback("ItemUse", (c, i, b, isE, p) => {
-//     if(i.id == VanillaItemID.diamond) {
-//         Notification.get("achievement").init("transparent", {
-//             elements: {
-//                 text: {
-//                     type: "text",
-//                     text: "2222"
-//                 },
-//                 icon: {
-//                     type: "image",
-//                     item: 263
-//                 }
-//             }
-//         })
-//     } else if (i.id == VanillaItemID.emerald) {
-//         Notification.get<AdvancementNotification>("advancement").init("transparent", {
-//             window: {
-//                 position: Entity.getSneaking(p) == true ? "left" : "right"
-//             },
-//             elements: {
-//                 text: {
-//                     type: "text",
-//                     text: String(Math.floor(Math.random()*20)-1)
-//                 },
-//                 icon: {
-//                     type: "image",
-//                     item: 263
-//                 }
-//             }
-//         })
-//     }
-// });
 EXPORT("Notification", Notification);
 EXPORT("TransparentNotification", TransparentNotification);
 EXPORT("AchievementNotification", AchievementNotification);

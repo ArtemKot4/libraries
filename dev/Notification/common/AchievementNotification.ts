@@ -31,14 +31,14 @@ class AchievementNotification extends Notification {
     }
 
     protected override work(): boolean {
-        if(!this.mark) {
+        if(this.mark == false) {
             if(this.height < 0) {
                 this.updateElementsHeight(this.height++);
             } else {
                 this.mark = true;
                 
                 java.lang.Thread.sleep(this.currentStyle.thread.reachTime);
-                this.onReach();
+                this.reach();
             }
         } else {
             if(this.height > -this.maxHeight) {

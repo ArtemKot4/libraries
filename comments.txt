@@ -10,3 +10,21 @@
    	"language": "typescript",
     "target": "../../release/Notification/Notification.js"
 },
+{
+    "source": "dev/Command",
+    "type": "library",
+    "language": "typescript",
+    "target": "../../release/Command/Command.js"
+},
+{
+    "source": "dev/LangFile",
+    "type": "library",
+    "language": "typescript",
+    "target": "../../release/LangFile/LangFile.js"
+}
+{
+    "source": "dev/Component",
+    "type": "library",
+    "language": "typescript",
+    "target": "../../release/Component/Component.js"
+}

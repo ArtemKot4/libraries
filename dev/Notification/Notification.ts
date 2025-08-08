@@ -277,9 +277,6 @@ abstract class Notification<T extends INotificationParams = INotificationParams>
         if(this.preventInit(styleName, runtimeStyle)) {
             return this.onPreventInit(styleName, runtimeStyle);
         }
-        runtimeStyle.thread = runtimeStyle.thread || {};
-        runtimeStyle.window = runtimeStyle.window || {};
-        
         this.currentStyleName = styleName;
 
         const style = this.getStyle(styleName);
@@ -289,13 +286,6 @@ abstract class Notification<T extends INotificationParams = INotificationParams>
             elements: {} 
         } as T;
         this.preInit(style, runtimeStyle);
-
-        for(const elementName in style.elements) {
-            this.currentStyle.elements[elementName] = Object.assign({}, 
-                style.elements[elementName], 
-                runtimeStyle.elements[elementName]
-            );
-        }
         
         this.UI.setAsGameOverlay(this.currentStyle.window.overlay);
         this.UI.setTouchable(this.currentStyle.window.touchable);
@@ -331,7 +321,7 @@ abstract class Notification<T extends INotificationParams = INotificationParams>
     }
 
     /**
-     * Method {@link init inits} and deletes last notification from queue
+     * Method {@link init inits} and deletes last notification from queue.
      * @returns true if notification was inited
      */
 
@@ -346,23 +336,50 @@ abstract class Notification<T extends INotificationParams = INotificationParams>
     }
 
     /**
+     * Method to get common style from basic style and runtime data.
+     * @param style your style
+     * @param runtimeStyle your runtime data
+     */
+
+    protected getCommonStyle(style: T, runtimeStyle: Partial<T>): T {
+        runtimeStyle.thread = runtimeStyle.thread || {};
+        runtimeStyle.window = runtimeStyle.window || {};
+
+        const commonStyle = {
+            thread: {},
+            window: {},
+            elements: {},
+            events: {}
+        } as T;
+        commonStyle.thread.sleepTime = (runtimeStyle.thread.sleepTime || style.thread.sleepTime) || this.getSleepTime();
+        commonStyle.thread.reachTime = (runtimeStyle.thread.reachTime || style.thread.reachTime) || this.getReachTime();
+        commonStyle.thread.queueTime = (runtimeStyle.thread.queueTime || style.thread.queueTime) || this.getQueueTime();
+        commonStyle.window.color = (runtimeStyle.window.color || style.window.color) || this.getColor();
+        commonStyle.window.height = (runtimeStyle.window.height || style.window.height) || this.getHeight();
+        commonStyle.window.width = (runtimeStyle.window.width || style.window.width) || this.getWidth();
+        commonStyle.window.scale = (runtimeStyle.window.scale || style.window.scale) || this.getScale();
+        commonStyle.window.x = (runtimeStyle.window.x || style.window.x) || this.getLocationX();
+        commonStyle.window.y = (runtimeStyle.window.y || style.window.y) || this.getLocationY();
+        commonStyle.window.overlay = (runtimeStyle.window.overlay || style.window.overlay) || this.isGameOverlay();
+        commonStyle.window.touchable = (runtimeStyle.window.touchable || style.window.touchable) || this.isTouchable();
+        
+        for(const elementName in style.elements) {
+            commonStyle.elements[elementName] = Object.assign({}, 
+                style.elements[elementName], 
+                runtimeStyle.elements[elementName] || {}
+            );
+        }
+        return commonStyle;
+    }
+
+    /**
      * Method, works before opening ui.
      * @param styleName name of style
      * @param runtimeStyle notification runtime params from init
      */
 
     protected preInit(style: T, runtimeStyle: Partial<T>): void {
-        this.currentStyle.thread.sleepTime = (runtimeStyle.thread.sleepTime || style.thread.sleepTime) || this.getSleepTime();
-        this.currentStyle.thread.reachTime = (runtimeStyle.thread.reachTime || style.thread.reachTime) || this.getReachTime();
-        this.currentStyle.thread.queueTime = (runtimeStyle.thread.queueTime || style.thread.queueTime) || this.getQueueTime();
-        this.currentStyle.window.color = (runtimeStyle.window.color || style.window.color) || this.getColor();
-        this.currentStyle.window.height = (runtimeStyle.window.height || style.window.height) || this.getHeight();
-        this.currentStyle.window.width = (runtimeStyle.window.width || style.window.width) || this.getWidth();
-        this.currentStyle.window.scale = (runtimeStyle.window.scale || style.window.scale) || this.getScale();
-        this.currentStyle.window.x = (runtimeStyle.window.x || style.window.x) || this.getLocationX();
-        this.currentStyle.window.y = (runtimeStyle.window.y || style.window.y) || this.getLocationY();
-        this.currentStyle.window.overlay = (runtimeStyle.window.overlay || style.window.overlay) || this.isGameOverlay();
-        this.currentStyle.window.touchable = (runtimeStyle.window.touchable || style.window.touchable) || this.isTouchable();
+        this.currentStyle = this.getCommonStyle(style, runtimeStyle);
     }
 
     /**
@@ -383,7 +400,7 @@ abstract class Notification<T extends INotificationParams = INotificationParams>
      * @param runtimeStyle your runtime data
      */
 
-    public sendFor(playerUid: number, styleName: string, runtimeStyle: INotificationParams): void {
+    public sendFor(playerUid: number, styleName: string, runtimeStyle: Partial<INotificationParams>): void {
         const client = Network.getClientForPlayer(playerUid);
 
         if(client) {
@@ -398,12 +415,29 @@ abstract class Notification<T extends INotificationParams = INotificationParams>
     protected onClose() {};
 
     /**
-     * Method to close ui.
+     * Method to close ui and call close events.
      */
 
     public close(): void {
+        if("onClose" in this.currentStyle.events) {
+            this.currentStyle.events.onClose(this);
+        }
         this.onClose();
         this.UI.close();
+        return;
+    }
+
+    /**
+     * Method to call reach events.
+     *  
+     */
+
+    public reach(): void {
+        if("onReach" in this.currentStyle.events) {
+            this.currentStyle.events.onReach(this);
+        }
+        this.onReach();
+        return;
     }
 
     /**
@@ -432,7 +466,7 @@ abstract class Notification<T extends INotificationParams = INotificationParams>
      * Method to get element set from your style
      * @param x addition x value concats to main, optional 
      * @param y addition y value concats to main, optional
-     * @param keyword word, adds to default key name, optional. If defined, after keyword `"_"` will be aded
+     * @param keyword word, adds to default key name, optional. If defined, after keyword `"_"` will be added
      * @returns default `UI.ElementSet`
      */
 
@@ -502,7 +536,7 @@ abstract class Notification<T extends INotificationParams = INotificationParams>
      * @param type type of the notification
      */
 
-    public static get<T extends Notification<INotificationParams>>(type: string): T {
+    public static get<T extends Notification>(type: string): T {
         if(!Notification.has(type)) {
             throw new java.lang.NoSuchFieldException(`Notification: type "${type}" of notification is not exists`);
         }
@@ -516,12 +550,12 @@ abstract class Notification<T extends INotificationParams = INotificationParams>
      * @param notification object of notification
      */
 
-    public static register(type: string, notification: Notification<INotificationParams>): Notification<INotificationParams> {
+    public static register(type: string, notification: Notification): Notification {
         if(Notification.has(type)) {
             throw new java.lang.SecurityException("Notification: notification is already registered");
         }
 
-        if(!notification.type) {
+        if(notification.type == null) {
             notification.type = type;
             notification.buildPacket();
         }
@@ -539,7 +573,7 @@ abstract class Notification<T extends INotificationParams = INotificationParams>
 
     /**
      * Method to get active types. 
-     * @returns actived types of notifications
+     * @returns active types of notifications
      */
 
     public static getActiveTypes(): string[] {
@@ -559,7 +593,7 @@ abstract class Notification<T extends INotificationParams = INotificationParams>
      * @param runtimeStyle notification runtime params from init
      */
 
-    public static init(type: string, styleName: string, runtimeStyle: INotificationParams): void {
+    public static init(type: string, styleName: string, runtimeStyle: Partial<INotificationParams>): void {
         return Notification.get(type).init(styleName, runtimeStyle);
     }
 
@@ -572,13 +606,13 @@ abstract class Notification<T extends INotificationParams = INotificationParams>
      * @param runtimeStyle notification runtime params from init
      */
 
-    public static sendFor(playerUid: number, type: string, styleName: string, runtimeStyle: INotificationParams): void {
+    public static sendFor(playerUid: number, type: string, styleName: string, runtimeStyle: Partial<INotificationParams>): void {
         if(!Notification.has(type)) {
             throw new java.lang.NoSuchFieldException(`Notification: type "${type}" of notification is not exists`)
         }
         const client = Network.getClientForPlayer(playerUid);
 
-        if(client) {
+        if(client != null) {
             return client.send(`packet.notification.send_${type}_notification`, { styleName: styleName, runtimeStyle: runtimeStyle });
         }
     }

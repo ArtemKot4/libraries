@@ -1,14 +1,3 @@
-/**
- * Данная библиотека была разработана для упрощения создания экранных анимаций.
- * Библиотека разработана с упором на производительность и высокую скорость работы, что позволяет вам создавать собственные анимации.
- *
- * Я признателен вам за использование библиотеки и надеюсь, что вы понимаете:
- * код открыт для ознакомления, однако копирование любой части вне контекста использования данной библиотеки недопустимо.
- *
- * Автор проекта: ArtemKot — github.com/ArtemKot4
- * Год основания: 2025
- * Вопросы можете задать мне в discord: discordapp.com/users/908847403073937419
- */
 declare let screenName: any;
 declare function separateText(text: string, lineSize?: number): string;
 interface INotificationTimerParams<thread> {
@@ -30,7 +19,7 @@ interface INotificationTimerParams<thread> {
         sleepTime?: number;
     } & thread;
 }
-interface INotificationParams<window = {}, thread = {}> extends INotificationTimerParams<thread> {
+interface INotificationParams<window = {}, thread = {}, events = {}> extends INotificationTimerParams<thread> {
     /**
      * Values to describe window.
      */
@@ -68,6 +57,13 @@ interface INotificationParams<window = {}, thread = {}> extends INotificationTim
          */
         touchable?: boolean;
     } & window;
+    /**
+     * Events
+     */
+    events?: {
+        onReach?(notification: Notification): void;
+        onClose?(notification: Notification): void;
+    } & events;
     /**
      * Elements from {@link UI.ElementSet}.
      */
@@ -242,10 +238,16 @@ declare abstract class Notification<T extends INotificationParams = INotificatio
      */
     protected run(): void;
     /**
-     * Method {@link init inits} and deletes last notification from queue
+     * Method {@link init inits} and deletes last notification from queue.
      * @returns true if notification was inited
      */
     initLast(): boolean;
+    /**
+     * Method to get common style from basic style and runtime data.
+     * @param style your style
+     * @param runtimeStyle your runtime data
+     */
+    protected getCommonStyle(style: T, runtimeStyle: Partial<T>): T;
     /**
      * Method, works before opening ui.
      * @param styleName name of style
@@ -271,9 +273,14 @@ declare abstract class Notification<T extends INotificationParams = INotificatio
      */
     protected onClose(): void;
     /**
-     * Method to close ui.
+     * Method to close ui and call close events.
      */
     close(): void;
+    /**
+     * Method to call reach events.
+     *
+     */
+    reach(): void;
     /**
      * Method works when elements reaches need position.
      */
@@ -289,7 +296,7 @@ declare abstract class Notification<T extends INotificationParams = INotificatio
      * Method to get element set from your style
      * @param x addition x value concats to main, optional
      * @param y addition y value concats to main, optional
-     * @param keyword word, adds to default key name, optional. If defined, after keyword `"_"` will be aded
+     * @param keyword word, adds to default key name, optional. If defined, after keyword `"_"` will be added
      * @returns default `UI.ElementSet`
      */
     protected static getStyledElementSet<T extends INotificationParams>(style: T, x?: number, y?: number, keyword?: string): UI.ElementSet;
@@ -302,21 +309,21 @@ declare abstract class Notification<T extends INotificationParams = INotificatio
      * Throws `java.lang.NoSuchFieldException` if notification is not exists.
      * @param type type of the notification
      */
-    static get<T extends Notification<INotificationParams>>(type: string): T;
+    static get<T extends Notification>(type: string): T;
     /**
      * Method to register new notification with special type.
      * Throws `java.lang.SecurityException` if notification exists.
      * @param type keyword to register notification
      * @param notification object of notification
      */
-    static register(type: string, notification: Notification<INotificationParams>): Notification<INotificationParams>;
+    static register(type: string, notification: Notification): Notification;
     /**
      * Method to learn is active type or not now.
      */
     static isActive(type: string): boolean;
     /**
      * Method to get active types.
-     * @returns actived types of notifications
+     * @returns active types of notifications
      */
     static getActiveTypes(): string[];
     /**
@@ -378,7 +385,7 @@ declare class AdvancementNotification extends Notification<IAdvancementParams> {
     protected setContent(): void;
     protected preInit(style: IAdvancementParams, runtimeStyle: Partial<IAdvancementParams>): void;
     protected postInit(): void;
-    moveLeft(): boolean;
-    moveRight(): boolean;
+    animationLeft(): boolean;
+    animationRight(): boolean;
     protected work(): boolean;
 }
