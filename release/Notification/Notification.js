@@ -431,7 +431,7 @@ var Notification = /** @class */ (function () {
                     element.multiline = true;
                 }
             }
-            if ("item" in description) {
+            if (description.item != null) {
                 element.type = "slot";
                 element.bitmap = "INotificationParams";
                 element.source = {

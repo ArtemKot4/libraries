@@ -496,7 +496,7 @@ abstract class Notification<T extends INotificationParams = INotificationParams>
                 }
             }
 
-            if("item" in description) {
+            if(description.item != null) {
                 element.type = "slot";
                 element.bitmap = "INotificationParams";
                 element.source = { 

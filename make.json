@@ -27,10 +27,10 @@
 			"language": "javascript"
 		},
         {
-            "source": "dev/Notification",
+            "source": "dev/Component",
             "type": "library",
             "language": "typescript",
-            "target": "../../release/Notification/Notification.js"
+            "target": "../../release/Component/Component.js"
         }
 	],
 	"additional": [
@@ -58,8 +58,8 @@
 	"excludeFromRelease": [],
     "tsconfig": {
         "jsx": "react",
-		"jsxFactory": "UI.parseElement",
-		"jsxFragmentFactory": "UI.Fragment",
+		"jsxFactory": "UI.JSX.parseElement",
+		"jsxFragmentFactory": "UI.JSX.Fragment",
 		"moduleResolution": "nodenext"
     }
 }

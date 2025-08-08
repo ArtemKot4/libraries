@@ -40,7 +40,7 @@ class AdvancementNotification extends Notification<IAdvancementParams> {
 
     protected override setContent(): void {
         //const style = this.getStyle(this.currentStyleName);
-        const height = (this.currentStyle.window.height * this.currentStyle.window.scale) * this.currentStyle.window.maxCount;
+        const height = (this.currentStyle.window.height * this.currentStyle.window.scale)// * this.currentStyle.window.maxCount;
 
         const elements = Notification.getStyledElementSet(this.currentStyle);
         // let count = 1;
