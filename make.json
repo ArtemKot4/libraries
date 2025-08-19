@@ -58,7 +58,7 @@
 	"excludeFromRelease": [],
     "tsconfig": {
         "jsx": "react",
-		"jsxFactory": "UI.JSX.parseElement",
+		"jsxFactory": "UI.JSX.parse",
 		"jsxFragmentFactory": "UI.JSX.Fragment",
 		"moduleResolution": "nodenext"
     }
